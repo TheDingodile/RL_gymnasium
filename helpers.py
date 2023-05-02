@@ -1,13 +1,16 @@
 import gymnasium as gym
 from gymnasium.utils.play import play
+import torch
+import matplotlib.pyplot as plt
+import os
+import numpy as np
+import seaborn as sns
+sns.set_theme()
 
 def run(parameters):
     annotations = dict(parameters.__annotations__)
     params = {e: parameters.__getattribute__(parameters, e) for e in annotations}
-    print("---------")
-    print("parameters: ")
-    print(params)
-    print("---------")
+    write_parameters(params)
     params["train_loop"](**params)
 
 def get_env(env_name, render_mode, continuous, num_envs, **args):
@@ -16,4 +19,46 @@ def get_env(env_name, render_mode, continuous, num_envs, **args):
     except:
         env = gym.vector.make(env_name, num_envs=num_envs, render_mode=render_mode)
     return env
-    
+
+def write_parameters(params):
+    name = params['name']
+    if not os.path.exists("trained_agents/" + name):
+        os.makedirs("trained_agents/" + name)
+    with open('trained_agents/' + name + '/parameters.txt', 'w') as f:
+        f.write("---------\n")
+        f.write("parameters: \n")
+        for key in params:
+            f.write(key + ": " + str(params[key]) + "\n")
+        f.write("---------")
+
+def save_experiment(agent, data_collector, name, save_agent_every, **args):
+    if data_collector.counter % save_agent_every < agent.num_envs:
+        torch.save(agent.network.state_dict(), "trained_agents/" + name + "/model.pt")
+
+        measure_every = data_collector.measure_performance_every
+        dones = np.array(data_collector.all_dones)
+        rewards = np.array(data_collector.all_rewards)
+        x_axis = np.arange(len(rewards)) * measure_every
+
+        plt.plot(x_axis, rewards/measure_every)
+        plt.xlabel("frames")
+        plt.ylabel("reward per frame")
+        plt.title("reward per frame - " + name)
+        plt.savefig("trained_agents/" + name + "/reward_per_frame.png")
+        plt.clf()
+
+        plt.plot(x_axis, rewards/dones)
+        plt.xlabel("frames")
+        plt.ylabel("reward per episode")
+        plt.title("reward per episode - " + name)
+        plt.savefig("trained_agents/" + name + "/reward_per_episode.png")
+        plt.clf()
+
+        plt.plot(x_axis, measure_every/dones)
+        plt.xlabel("frames")
+        plt.ylabel("episode length")
+        plt.title("episode length - " + name)
+        plt.savefig("trained_agents/" + name + "/episode_length.png")
+        plt.clf()
+
+

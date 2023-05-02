@@ -17,11 +17,12 @@ class Agent():
         self.optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=weight_decay)
         self.criterion = nn.MSELoss()
 
-    def take_action(self, state, **args):
+    def take_action(self, state):
         raise NotImplementedError
 
-    def train(self, **args):
+    def train(self):
         raise NotImplementedError
+
 
 
 class QAgent(Agent):

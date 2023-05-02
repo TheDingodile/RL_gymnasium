@@ -1,4 +1,4 @@
-from helpers import get_env
+from helpers import get_env, save_experiment
 from agents import Agent, QAgent
 from copy import deepcopy
 from replay_buffer import replay_buffer
@@ -19,3 +19,4 @@ def deep_q_learn(**args):
         state = new_state
         buffer.get_batch()
         agent.train(buffer)
+        save_experiment(agent, data_collector, **args)
