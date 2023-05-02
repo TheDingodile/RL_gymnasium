@@ -5,13 +5,13 @@ from Qexploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "reinforce_learn_lunar_lander" # (name of the trained agent)
-    train_loop: Callable = eval # (choose between deep q learning, policy gradient, actor critic, eval)
+    name: str = "test" # (name of the trained agent)
+    train_loop: Callable = deep_q_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     # (eval is used to evaluate a trained agent with the name specified above)
 
     # training parameters
     batch_size: int = 512
-    learning_rate: float = 1e-4
+    learning_rate: float = 5e-5
     weight_decay: float = 1e-5
 
     # only used with a replay buffer
@@ -28,7 +28,7 @@ class parameters:
     # only used with epsilon greedy
     epsilon_start: float = 0.9
     epsilon_end: float = 0.2
-    decay_period_of_epsilon: int = 500000
+    decay_period_of_epsilon: int = 1000000
 
     # environment parameters
     env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)

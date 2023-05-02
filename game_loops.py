@@ -1,5 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent
+from agents import Agent, QAgent, Actor_Agent
 from copy import deepcopy
 from replay_buffer import replay_buffer
 from collector import collector
@@ -14,8 +14,7 @@ def eval(**args):
     agent.network.load_state_dict(torch.load("trained_agents/" + args["name"] + "/model.pt"))
     while True:
         action = agent.take_action(state)
-        new_state, reward, done, truncated, info = env.step(action)
-        # print("state: ", state, "new_state: ", new_state, "reward: ", reward, "done: ", done, "truncated: ", truncated, "info: ", info)
+        new_state, _, _, _, _ = env.step(action)
         state = new_state
 
 
@@ -28,10 +27,26 @@ def deep_q_learn(**args):
 
     while True:
         action = agent.take_action(state)
-        new_state, reward, done, truncated, info = env.step(action)
+        new_state, reward, done, truncated, _ = env.step(action)
         buffer.save_data((state, action, reward, new_state, done), truncated)
         data_collector.collect(reward, done)
         state = new_state
         buffer.get_batch()
-        agent.train(buffer)
+        agent.try_train(buffer)
+        save_experiment(agent, data_collector, **args)
+
+
+def reinforce_learn(**args):
+    env = get_env(**args)
+    state, _ = env.reset()
+    agent = Actor_Agent(env, **args)
+    data_collector = collector(**args)
+
+    while True:
+        action = agent.take_action(state)
+        new_state, reward, done, truncated, _ = env.step(action)
+        agent.save_data((state, action, reward, new_state, done), truncated)
+        data_collector.collect(reward, done)
+        state = new_state
+        agent.train()
         save_experiment(agent, data_collector, **args)
