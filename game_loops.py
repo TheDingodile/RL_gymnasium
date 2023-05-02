@@ -14,7 +14,8 @@ def eval(**args):
     agent.network.load_state_dict(torch.load("trained_agents/" + args["name"] + "/model.pt"))
     while True:
         action = agent.take_action(state)
-        new_state, _, _, _, _ = env.step(action)
+        new_state, reward, done, truncated, info = env.step(action)
+        # print("state: ", state, "new_state: ", new_state, "reward: ", reward, "done: ", done, "truncated: ", truncated, "info: ", info)
         state = new_state
 
 
@@ -27,8 +28,8 @@ def deep_q_learn(**args):
 
     while True:
         action = agent.take_action(state)
-        new_state, reward, done, _, _ = env.step(action)
-        buffer.save_data((state, action, reward, new_state, done))
+        new_state, reward, done, truncated, info = env.step(action)
+        buffer.save_data((state, action, reward, new_state, done), truncated)
         data_collector.collect(reward, done)
         state = new_state
         buffer.get_batch()

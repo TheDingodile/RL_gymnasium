@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 class replay_buffer():
-    def __init__(self, buffer_size, batch_size, num_envs, **args):
+    def __init__(self, buffer_size, batch_size, **args):
         self.counter = 0
         self.buffer_size = buffer_size
         self.batch_size = batch_size
@@ -11,10 +11,11 @@ class replay_buffer():
         self.actions = []
         self.rewards = []
 
-    def save_data(self, data):
+    def save_data(self, data, truncated):
         for i in range(len(data[0])):
-            self.buffer[self.counter % self.buffer_size] = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i]))
-            self.counter += 1
+            if not truncated[i]:
+                self.buffer[self.counter % self.buffer_size] = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i]))
+                self.counter += 1
 
     def get_batch(self):
         idx = torch.randint(0, min(self.counter, self.buffer_size), (self.batch_size,))
