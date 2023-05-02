@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import seaborn as sns
+import json
+from Qexploration import Explorations, Exploration
 sns.set_theme()
 
 def run(parameters):
     annotations = dict(parameters.__annotations__)
     params = {e: parameters.__getattribute__(parameters, e) for e in annotations}
-    write_parameters(params)
+    if params["train_loop"].__name__ != "eval":
+        write_parameters(params)
     params["train_loop"](**params)
 
 def get_env(env_name, render_mode, continuous, num_envs, **args):
@@ -24,12 +27,34 @@ def write_parameters(params):
     name = params['name']
     if not os.path.exists("trained_agents/" + name):
         os.makedirs("trained_agents/" + name)
+
     with open('trained_agents/' + name + '/parameters.txt', 'w') as f:
         f.write("---------\n")
         f.write("parameters: \n")
         for key in params:
-            f.write(key + ": " + str(params[key]) + "\n")
+            if key == "train_loop":
+                f.write(key + ": " + params[key].__name__ + "\n")
+            else:
+                f.write(key + ": " + str(params[key]) + "\n")
         f.write("---------")
+
+def eval_mode(**args):
+    args["num_envs"] = 1
+    args["render_mode"] = "human"
+    args["exploration"] = Explorations.greedy
+    # open txt file
+    with open('trained_agents/' + args["name"] + '/parameters.txt', 'r') as f:
+        # wait for line with train_loop
+        while True:
+            line = f.readline()
+            if line.startswith("train_loop: "):
+                args["train_loop"] = line.split("train_loop: ")[1].strip()
+            if line.startswith("continuous: "):
+                args["continuous"] = line.split("continuous: ")[1].strip() == "True"
+            # if no more lines break
+            if line == "":
+                break
+    return args
 
 def save_experiment(agent, data_collector, name, save_agent_every, **args):
     if data_collector.counter % save_agent_every < agent.num_envs:

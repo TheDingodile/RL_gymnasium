@@ -1,12 +1,13 @@
 from typing import Callable
 from helpers import run
-from game_loops import deep_q_learn
+from game_loops import deep_q_learn, eval
 from Qexploration import Explorations, Exploration
 
 class parameters:
     # general parameters
     name: str = "deep_q_learn_cartpole" # (name of the trained agent)
-    train_loop: Callable = deep_q_learn # (choose between deep q learning, policy gradient, actor critic, etc.)
+    train_loop: Callable = eval # (choose between deep q learning, policy gradient, actor critic, eval)
+    # (eval is used to evaluate a trained agent with the name specified above)
 
     # training parameters
     batch_size: int = 512

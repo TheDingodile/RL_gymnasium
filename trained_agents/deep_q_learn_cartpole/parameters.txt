@@ -1,7 +1,7 @@
 ---------
 parameters: 
 name: deep_q_learn_cartpole
-train_loop: <function deep_q_learn at 0x00000232B1DBC3A0>
+train_loop: deep_q_learn
 batch_size: 512
 learning_rate: 0.001
 weight_decay: 1e-05
