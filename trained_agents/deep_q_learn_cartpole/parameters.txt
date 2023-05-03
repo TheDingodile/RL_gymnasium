@@ -5,10 +5,10 @@ train_loop: deep_q_learn
 batch_size: 512
 learning_rate: 0.001
 weight_decay: 1e-05
-train_every_frames: 2
+trains_every_frames: 2
 train_after_frames: 20000
 buffer_size: 200000
-update_target_after_training: 1000
+update_target_every_frames: 1000
 gamma: 0.995
 exploration: Explorations.linearly_decaying_eps_greedy
 epsilon_start: 0.9

@@ -18,9 +18,9 @@ class collector():
         self.summed_reward = 0
         self.dones = 0
 
-    def collect(self, rewards, dones):
+    def collect(self, rewards, dones, truncated):
         self.summed_reward += sum(rewards)
-        self.dones += sum(dones)
+        self.dones += sum(dones) + sum(truncated)
 
         for _ in range(self.num_envs):
             self.counter += 1
