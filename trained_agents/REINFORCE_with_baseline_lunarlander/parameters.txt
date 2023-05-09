@@ -1,6 +1,6 @@
 ---------
 parameters: 
-name: REINFORCE
+name: REINFORCE_with_baseline_lunarlander
 train_loop: reinforce_learn
 batch_size: 512
 learning_rate: 0.0005
@@ -12,6 +12,7 @@ update_target_every_frames: 4000
 episodes_before_train: 16
 baseline_model: True
 gamma: 0.995
+entropy_regulization: 0.5
 exploration: Explorations.softmax
 epsilon_start: 0.9
 epsilon_end: 0.1
@@ -19,7 +20,7 @@ decay_period_of_epsilon: 200000
 env_name: LunarLander-v2
 render_mode: None
 continuous: False
-num_envs: 4
+num_envs: 16
 save_agent_every: 100000
 measure_performance_every: 40000
 ---------

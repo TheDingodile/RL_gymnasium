@@ -5,7 +5,7 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "REINFORCE_with_baseline_cartpole" # (name of the trained agent)
+    name: str = "REINFORCE_with_baseline_lunarlander" # (name of the trained agent)
     train_loop: Callable = reinforce_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     # (eval is used to evaluate a trained agent with the name specified above)
 
@@ -13,21 +13,22 @@ class parameters:
     batch_size: int = 512
     learning_rate: float = 5e-4
     weight_decay: float = 1e-5
+    trains_every_frames: int = 4
 
     # only used with a replay buffer
-    trains_every_frames: int = 4
     train_after_frames: int = 50000
     buffer_size: int = 200000
     update_target_every_frames: int = 4000
 
-    # only used with learning from episodes
+    # only used with learning from episodes (eg. REINFORCE or actor critic)
     episodes_before_train: int = 16 # (if set to lower than num_envs, it will be set to num_envs)
-    baseline_model: bool = True # (whether to use a baseline or not for advantage estimation)
+    baseline_model: bool = True # (whether to use a baseline or not (for advantage function estimation))
 
     # agent parameters
     gamma: float = 0.995 # (only used with n-step learning)
+    entropy_regulization: float = 0.5 # (only used with reinforce)
 
-    # for QAgent
+
     exploration: Explorations = Explorations.softmax # (choose between epsilon greedy, greedy, etc.)
     # only used with epsilon greedy
     epsilon_start: float = 0.9
@@ -35,8 +36,8 @@ class parameters:
     decay_period_of_epsilon: int = 200000
 
     # environment parameters
-    env_name: str = "CartPole-v1" # (choose between LunarLander-v2, CartPole-v1, etc.)
-    render_mode: str = None # (human or None, only use human if very few num_envs (overwritten by eval)))
+    env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)
+    render_mode: str = None # (human or None, only use human if very few num_envs (is alywas human if eval mode)))))
     continuous: bool = False
     num_envs: int = 16
 

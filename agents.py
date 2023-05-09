@@ -52,8 +52,9 @@ class QAgent(Agent):
             self.optimizer.zero_grad()
 
 class Actor_Agent(Agent):
-    def __init__(self, env, **args):
+    def __init__(self, env, entropy_regulization, **args):
         super().__init__(env, Networks.Actor_Network , **args)
+        self.entropy_regulization = entropy_regulization
 
     def train(self, buffer: episodic_replay_buffer, base_line_model):
         if buffer.is_ready_to_train() == False:
@@ -71,7 +72,7 @@ class Actor_Agent(Agent):
                     base_line_model.train(batch_states, batch_labels)
                     baseline = base_line_model.forward(batch_states)
                     batch_labels = batch_labels - baseline
-                loss = torch.mean(-torch.gather(log_policy, 1, batch_actions.unsqueeze(1)).squeeze(1) * batch_labels - 0.5 * torch.sum(log_policy, dim=1) - entropy_of_policy)
+                loss = torch.mean(-torch.gather(log_policy, 1, batch_actions.unsqueeze(1)).squeeze(1) * batch_labels - self.entropy_regulization * torch.sum(log_policy, dim=1) - entropy_of_policy)
                 # print(loss, labels)
                 loss.backward()
                 # print length of gradient
