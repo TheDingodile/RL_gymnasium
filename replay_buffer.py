@@ -28,46 +28,48 @@ class episodic_replay_buffer():
         self.gamma = gamma
         self.episodes_before_train = max(num_envs, episodes_before_train)
         self.free = list(range(self.episodes_before_train * 2))
+        self.done = 0
         self.currently_in_idx = {env_number: None for env_number in range(self.episodes_before_train)}
         self.buffer = [[] for _ in range(self.episodes_before_train * 2)]
+        self.counter = 0
 
     def save_data(self, data, truncated):
         for i in range(len(data[0])):
-            currently_in = self.currently_in_idx[i]
-            if currently_in == None:
-                currently_in = self.free.pop()
+            if self.currently_in_idx[i] == None:
+                self.currently_in_idx[i] = self.free.pop()
 
             if not truncated[i]:
-                self.buffer[currently_in].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i])))
+                self.buffer[self.currently_in_idx[i]].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i])))
+                self.counter += 1
             if data[4][i]:
                 self.currently_in_idx[i] = None
+                self.done += 1
 
     def is_ready_to_train(self):
-        return len(self.free) <= self.episodes_before_train
+        return self.done >= self.episodes_before_train
     
-    def get_batch(self):
-        for i in range(self.episodes_before_train):
+    def get_data(self):
+        states = []
+        actions = []
+        new_states = []
+        labels = []
+        for i in range(self.episodes_before_train * 2):
             if i not in self.free:
+                self.done -= 1
                 self.free.append(i)
-                for j in range(len(self.buffer[i])):
-                    self.buffer[i][j] = None
+                episode = self.buffer[i]
+                [labels.append(label.type(torch.float32)) for label in self.calculate_values_monte_carlo(episode)]
+                [states.append(episode[i][0]) for i in range(len(episode))]
+                [actions.append(episode[i][1]) for i in range(len(episode))]
+                [new_states.append(episode[i][3]) for i in range(len(episode))]
                 self.buffer[i] = []
-
-                idx = torch.randint(0, len(self.buffer[i]), (1,))
-                states = torch.stack([self.buffer[i][idx][0] for i in range(self.episodes_before_train)])
-                actions = torch.stack([self.buffer[i][idx][1] for i in range(self.episodes_before_train)])
-                rewards = torch.stack([self.buffer[i][idx][2] for i in range(self.episodes_before_train)])
-                next_states = torch.stack([self.buffer[i][idx][3] for i in range(self.episodes_before_train)])
-                dones = torch.stack([self.buffer[i][idx][4] for i in range(self.episodes_before_train)])
-                return states, actions, rewards, next_states, dones
+    
+        return torch.stack(states), torch.stack(actions), torch.stack(labels), torch.stack(new_states)
             
-    def calculate_values(self, episode):
-        # calculate discounted returns from an episode
+    def calculate_values_monte_carlo(self, episode):
         rewards = [episode[i][2] for i in range(len(episode))]
-        returns = [0 for _ in range(len(episode))]
+        returns = [None for _ in range(len(episode))]
         returns[-1] = rewards[-1]
         for i in range(len(episode) - 2, -1, -1):
             returns[i] = rewards[i] + self.gamma * returns[i + 1]
         return returns
-    
-    def get_batch(self):

@@ -6,7 +6,7 @@ import os
 import numpy as np
 import seaborn as sns
 import json
-from Qexploration import Explorations, Exploration
+from exploration import Explorations, Exploration
 sns.set_theme()
 
 def run(parameters):

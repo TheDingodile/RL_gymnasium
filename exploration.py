@@ -7,6 +7,7 @@ class Explorations(Enum):
     boltzmann = 2
     eps_boltzmann = 3
     linearly_decaying_eps_greedy = 4
+    softmax = 5
 
 class Exploration:
     def __init__(self, exploration: Explorations, action_space, epsilon_start, epsilon_end, decay_period_of_epsilon, **args):
@@ -20,6 +21,8 @@ class Exploration:
             self.explore = self.eps_greedy
         elif exploration == Explorations.linearly_decaying_eps_greedy:
             self.explore = self.linearly_decaying_eps_greedy
+        elif exploration == Explorations.softmax:
+            self.explore = self.softmax
         self.counter = 0
         
 
@@ -27,19 +30,22 @@ class Exploration:
     def epsilon(self):
         return max(self.epsilon_end, self.epsilon_start - self.counter / self.decay_period_of_epsilon * (self.epsilon_start - self.epsilon_end))
 
-    def explore(self, state):
+    def explore(self, values):
         pass
         
-    def greedy(self, state):
-        return torch.argmax(state, dim=1).tolist()
+    def greedy(self, values):
+        return torch.argmax(values, dim=1).tolist()
 
-    def eps_greedy(self, state):
+    def eps_greedy(self, values):
         if torch.rand(1) < self.epsilon:
-            return torch.randint(0, self.action_space, (state.shape[0],)).tolist()
-        return self.greedy(state)
+            return torch.randint(0, self.action_space, (values.shape[0],)).tolist()
+        return self.greedy(values)
     
-    def linearly_decaying_eps_greedy(self, state):
-        self.counter += state.shape[0]
+    def linearly_decaying_eps_greedy(self, values):
+        self.counter += values.shape[0]
         if torch.rand(1) < self.epsilon:
-            return torch.randint(0, self.action_space, (state.shape[0],)).tolist()
-        return self.greedy(state)
+            return torch.randint(0, self.action_space, (values.shape[0],)).tolist()
+        return self.greedy(values)
+    
+    def softmax(self, values):
+        return torch.multinomial(values, 1).squeeze(1).tolist()
