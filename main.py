@@ -5,15 +5,15 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "REINFORCE_with_baseline_lunarlander" # (name of the trained agent)
+    name: str = "test" # (name of the trained agent)
     train_loop: Callable = reinforce_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     # (eval is used to evaluate a trained agent with the name specified above)
 
     # training parameters
     batch_size: int = 512
-    learning_rate: float = 5e-4
+    learning_rate: float = 1e-4
     weight_decay: float = 1e-5
-    trains_every_frames: int = 4
+    trains_every_frames: int = 2
 
     # only used with a replay buffer
     train_after_frames: int = 50000
@@ -26,10 +26,10 @@ class parameters:
 
     # agent parameters
     gamma: float = 0.995 # (only used with n-step learning)
-    entropy_regulization: float = 0.5 # (only used with reinforce)
+    entropy_regulization: float = 5 # (only used with reinforce)
 
 
-    exploration: Explorations = Explorations.softmax # (choose between epsilon greedy, greedy, etc.)
+    exploration: Explorations = Explorations.normal_distribution # (choose between epsilon greedy, greedy, softmax, normal distribution, etc.)
     # only used with epsilon greedy
     epsilon_start: float = 0.9
     epsilon_end: float = 0.1
@@ -38,7 +38,7 @@ class parameters:
     # environment parameters
     env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)
     render_mode: str = None # (human or None, only use human if very few num_envs (is alywas human if eval mode)))))
-    continuous: bool = False
+    continuous: bool = True
     num_envs: int = 16
 
     # extra parameters

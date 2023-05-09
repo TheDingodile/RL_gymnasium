@@ -1,5 +1,6 @@
 import torch
 from enum import Enum
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 class Explorations(Enum):
     greedy = 0
@@ -8,6 +9,7 @@ class Explorations(Enum):
     eps_boltzmann = 3
     linearly_decaying_eps_greedy = 4
     softmax = 5
+    normal_distribution = 6
 
 class Exploration:
     def __init__(self, exploration: Explorations, action_space, epsilon_start, epsilon_end, decay_period_of_epsilon, **args):
@@ -23,6 +25,8 @@ class Exploration:
             self.explore = self.linearly_decaying_eps_greedy
         elif exploration == Explorations.softmax:
             self.explore = self.softmax
+        elif exploration == Explorations.normal_distribution:
+            self.explore = self.normal_distribution
         self.counter = 0
         
 
@@ -49,3 +53,6 @@ class Exploration:
     
     def softmax(self, values):
         return torch.multinomial(values, 1).squeeze(1).tolist()
+    
+    def normal_distribution(self, values):
+        return MultivariateNormal(values, 0.2 * torch.eye(self.action_space)).sample().tolist()

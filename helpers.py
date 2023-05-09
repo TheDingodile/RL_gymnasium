@@ -38,6 +38,12 @@ def write_parameters(params):
                 f.write(key + ": " + str(params[key]) + "\n")
         f.write("---------")
 
+def get_action_space(env, continuous, **args):
+    if continuous:
+        return env.action_space.shape[0]
+    else:
+        return env.action_space[0].n
+
 def eval_mode(**args):
     args["num_envs"] = 1
     args["render_mode"] = "human"
