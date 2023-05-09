@@ -61,9 +61,24 @@ class Actor_Agent(Agent):
         self.continuous = continuous
 
     def train(self, buffer: episodic_replay_buffer, base_line_model):
+        pass
+
+    def log_policy(self, policy, actions):
+        if self.continuous:
+            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+        else:
+            log_policy = torch.log(policy)
+            entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
+            return torch.gather(log_policy, 1, actions.unsqueeze(1)).squeeze(1), entropy_of_policy
+
+class REINFORCE_Agent(Actor_Agent):
+    def __init__(self, env, **args):
+        super().__init__(env, **args)
+
+    def train(self, buffer: episodic_replay_buffer, base_line_model):
         if buffer.is_ready_to_train() == False:
             return
-        states, actions, labels, _ = buffer.get_data()
+        states, actions, labels, _ = buffer.get_data_monte_carlo()
         for _ in range(self.trains_every_frames):
             for i in range(0, len(states), self.batch_size):
                 batch_states = states[i:i+self.batch_size]
@@ -80,15 +95,31 @@ class Actor_Agent(Agent):
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
-    def log_policy(self, policy, actions):
-        if self.continuous:
-            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
-        else:
-            log_policy = torch.log(policy)
-            entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
-            return torch.gather(log_policy, 1, actions.unsqueeze(1)).squeeze(1), entropy_of_policy
+class Actorcritic_actor(Actor_Agent):
+    def __init__(self, env, lambda_, **args):
+        super().__init__(env, **args)
+        self.lambda_ = lambda_
 
-        
+    def train(self, buffer: episodic_replay_buffer, base_line_model):
+        if buffer.is_ready_to_train() == False:
+            return
+        states, actions, _, new_states = buffer.get_data(monte_carlo=False)
+        for _ in range(self.trains_every_frames):
+            for i in range(0, len(states), self.batch_size):
+                batch_states = states[i:i+self.batch_size]
+                batch_actions = actions[i:i+self.batch_size]
+                batch_new_states = new_states[i:i+self.batch_size]
+                policy = self.forward(batch_states)
+                log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
+                if base_line_model != None:
+                    base_line_model.train(batch_states, batch_labels)
+                    baseline = base_line_model.forward(batch_states)
+                    batch_labels = batch_labels - baseline
+                loss = torch.mean(-log_policy * batch_labels - self.entropy_regulization * entropy_of_policy)
+                loss.backward()
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+
 
 class BaselineAgent(Agent):
     def __init__(self, env, **args):
@@ -100,3 +131,6 @@ class BaselineAgent(Agent):
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
+
+class PPO_Agent(Actor_Agent):
+    pass

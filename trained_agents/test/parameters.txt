@@ -1,0 +1,28 @@
+---------
+parameters: 
+name: test
+train_loop: reinforce_learn
+batch_size: 512
+learning_rate: 0.0002
+weight_decay: 1e-05
+trains_every_frames: 4
+train_after_frames: 50000
+buffer_size: 200000
+update_target_every_frames: 4000
+episodes_before_train: 16
+baseline_model: True
+gamma: 0.995
+lambda_: 0.9
+sample_lengths: 30
+entropy_regulization: 5
+exploration: Explorations.softmax
+epsilon_start: 0.9
+epsilon_end: 0.1
+decay_period_of_epsilon: 200000
+env_name: LunarLander-v2
+render_mode: None
+continuous: False
+num_envs: 2
+save_agent_every: 100000
+measure_performance_every: 40000
+---------
