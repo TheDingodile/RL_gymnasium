@@ -7,7 +7,8 @@ class parameters:
     # general parameters
     name: str = "test" # (name of the trained agent)
     train_loop: Callable = reinforce_learn # (choose between deep q learning, policy gradient, actor critic, eval)
-    # (eval is used to evaluate a trained agent with the name specified above)
+    exploration: Explorations = Explorations.multinomial # (How to choose action from output of agent)
+    # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
     batch_size: int = 512
@@ -30,8 +31,6 @@ class parameters:
     sample_lengths: int = 30 # (only used with eligibility traces)
     entropy_regulization: float = 5 # (only used with reinforce)
 
-
-    exploration: Explorations = Explorations.multinomial # (choose between epsilon greedy, greedy, multinomial, normal distribution, etc.)
     # only used with epsilon greedy
     epsilon_start: float = 0.9
     epsilon_end: float = 0.1
