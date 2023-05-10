@@ -14,6 +14,10 @@ def run(parameters):
     params = {e: parameters.__getattribute__(parameters, e) for e in annotations}
     if params["train_loop"].__name__ != "eval":
         write_parameters(params)
+    if params["train_loop"].__name__ == "eval":
+        params = eval_mode(**params)
+    elif params["train_loop"].__name__ == "reinforce_learn":
+        params = reinforce_mode(**params)
     params["train_loop"](**params)
 
 def get_env(env_name, render_mode, continuous, num_envs, **args):
@@ -60,6 +64,10 @@ def eval_mode(**args):
             # if no more lines break
             if line == "":
                 break
+    return args
+
+def reinforce_mode(**args):
+    args["exploration"] = Explorations.softmax
     return args
 
 def save_experiment(agent, data_collector, name, save_agent_every, **args):
