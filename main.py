@@ -31,7 +31,7 @@ class parameters:
     entropy_regulization: float = 5 # (only used with reinforce)
 
 
-    exploration: Explorations = Explorations.softmax # (choose between epsilon greedy, greedy, softmax, normal distribution, etc.)
+    exploration: Explorations = Explorations.multinomial # (choose between epsilon greedy, greedy, multinomial, normal distribution, etc.)
     # only used with epsilon greedy
     epsilon_start: float = 0.9
     epsilon_end: float = 0.1

@@ -15,7 +15,7 @@ gamma: 0.995
 lambda_: 0.9
 sample_lengths: 30
 entropy_regulization: 5
-exploration: Explorations.softmax
+exploration: Explorations.multinomial
 epsilon_start: 0.9
 epsilon_end: 0.1
 decay_period_of_epsilon: 200000

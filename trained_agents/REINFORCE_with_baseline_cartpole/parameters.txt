@@ -12,7 +12,7 @@ update_target_every_frames: 4000
 episodes_before_train: 16
 baseline_model: True
 gamma: 0.995
-exploration: Explorations.softmax
+exploration: Explorations.multinomial
 epsilon_start: 0.9
 epsilon_end: 0.1
 decay_period_of_epsilon: 200000

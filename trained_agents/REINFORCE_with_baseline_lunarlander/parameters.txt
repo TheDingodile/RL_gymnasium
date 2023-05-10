@@ -13,7 +13,7 @@ episodes_before_train: 16
 baseline_model: True
 gamma: 0.995
 entropy_regulization: 2
-exploration: Explorations.softmax
+exploration: Explorations.multinomial
 epsilon_start: 0.9
 epsilon_end: 0.1
 decay_period_of_epsilon: 200000

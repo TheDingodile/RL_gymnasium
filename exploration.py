@@ -8,7 +8,7 @@ class Explorations(Enum):
     boltzmann = 2
     eps_boltzmann = 3
     linearly_decaying_eps_greedy = 4
-    softmax = 5
+    multinomial = 5
     normal_distribution = 6
 
 class Exploration:
@@ -23,8 +23,8 @@ class Exploration:
             self.explore = self.eps_greedy
         elif exploration == Explorations.linearly_decaying_eps_greedy:
             self.explore = self.linearly_decaying_eps_greedy
-        elif exploration == Explorations.softmax:
-            self.explore = self.softmax
+        elif exploration == Explorations.multinomial:
+            self.explore = self.multinomial
         elif exploration == Explorations.normal_distribution:
             self.explore = self.normal_distribution
         self.counter = 0
@@ -51,7 +51,7 @@ class Exploration:
             return torch.randint(0, self.action_space, (values.shape[0],)).tolist()
         return self.greedy(values)
     
-    def softmax(self, values):
+    def multinomial(self, values):
         return torch.multinomial(values, 1).squeeze(1).tolist()
     
     def normal_distribution(self, values):
