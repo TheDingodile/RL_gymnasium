@@ -6,15 +6,15 @@ from exploration import Explorations, Exploration
 class parameters:
     # general parameters
     name: str = "test" # (name of the trained agent)
-    train_loop: Callable = deep_q_learn # (choose between deep q learning, policy gradient, actor critic, eval)
-    exploration: Explorations = Explorations.linearly_decaying_eps_greedy # (How to choose action from output of agent)
+    train_loop: Callable = reinforce_learn # (choose between deep q learning, policy gradient, actor critic, eval)
+    exploration: Explorations = Explorations.multinomial # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
     batch_size: int = 512
     learning_rate: float = 5e-4
     weight_decay: float = 1e-5
-    trains_every_frames: int = 1
+    trains_every_frames: int = 4
 
     # only used with a replay buffer
     train_after_frames: int = 50000
@@ -29,7 +29,7 @@ class parameters:
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.9 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces)
-    entropy_regulization: float = 5 # (only used with reinforce)
+    entropy_regulization: float = 2 # (only used with reinforce)
 
     # only used with epsilon greedy
     epsilon_start: float = 0.9
