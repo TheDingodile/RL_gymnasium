@@ -17,7 +17,17 @@ To use the project, you run the main.py file. Here you can choose between the di
 
 Here is a list of all the hyper-parameters and what they do:
 
-- **env_name**: 
-The name parameter is the name you give the experiment. A folder will be created with the model you are training, some performance graphs and a txt file of the used hyper-parameters.
+- **name**: 
+It is the name you give the experiment. The experiment will be saved in the trained_agents folder. If you choose a name which already exists it will be overwrittin. A folder will be created with the model you are training, some performance graphs and a txt file of the used hyper-parameters. However, if you use eval mode (see below) the model and performance graphs will be loaded from the trained_agents folder.
 
-the train-loop parameter decides what kind of RL algorithm you want to use. It should be 
+- **train_loop**:
+This parameter decides what kind of RL algorithm you want to use. It can also be set to eval which loads the folder with the name given and you can see it play.
+
+- **exploration**:
+This parameter decides how you want to choose your action. The reason for the name exploration is because in deep-q learning it often is associated with what exploration method you use (eg. epsilon greedy, greedy). However, in other train_loops it should be seen as more "how do i sample from the output of my model". So for a discrete REINFORCE train_loop you could choose Multinomial, and for a continious REINFORCE train_loop you could choose a normal distribution.
+
+- **batch_size**:
+When training, how big of a batch size do you want to use.
+
+
+In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continious on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations.
