@@ -29,9 +29,6 @@ This parameter decides how you want to choose your action. The reason for the na
 - **batch_size**:
 When training, how big of a batch size do you want to use.
 
-
-In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continious on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations.
-
 - **learning_rate**:
 The learning rate of the model.
 
@@ -59,5 +56,7 @@ The discount factor used in the RL algorithms.
 - **lambda_**:
 The lambda used in the algorithms with eligibility traces.
 
+
+In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continious on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations.
 
 
