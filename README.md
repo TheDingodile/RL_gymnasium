@@ -13,7 +13,7 @@ For windows, often the gymnasium can only install if you have installed [Swig](h
 
 ## Usage
 
-To use the project, you run the main.py file. Here you can choose between the different methods (deep_q, REINFORCE, etc..) and the different environments (CartPole, MountainCar, etc...). All the hyper-parameters that you can tune is also in the main.py file. In general, it should be fairly straight forward to choose the parameters you want, as most of them are classes that displays their options or are just a number.
+To use the project, you run the main.py file. Here you can choose between the different methods (deep_q, REINFORCE, etc..) and the different environments (CartPole, MountainCar, etc...). All the hyper-parameters that you can tune is also in the main.py file. In general, it should be fairly straight forward to choose the parameters you want, as most of them are classes that displays their options or are just a number. You can go to the train_agents folder to have a look at the experiments that has already been run.
 
 Here is a list of all the hyper-parameters and what they do:
 
@@ -58,5 +58,26 @@ The lambda used in the algorithms with eligibility traces.
 
 
 In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continious on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations.
+
+## Details
+
+The project is build up in the following way:
+
+- **main.py**:
+Is the front-end of the project. Here you can choose the hyper-parameters and what you want to train. It simply runs the "run" function with your class of arguments
+
+- **run.py**:
+This function just takes care of the arguments and runs the correct function. It also saves the hyper-parameters in a txt file.
+
+- **game_loops.py**:
+Here all the gameloops are. Most of them look similar (have a take_action, step, train, collect), but they vary to some extent.
+
+- **agent.py**:
+This file has all the different agents and their training methods. There is a superclass, Agent, that holds much of the attributes all the agents has in common. There are some other superclasses in order to simplify all the different agents
+
+- **exploration.py**:
+This file holds a class which holds all the exploration methods. This makes it easy to choose what exploration method you want to use.
+
+
 
 
