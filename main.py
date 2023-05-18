@@ -27,8 +27,8 @@ class parameters:
 
     # agent parameters
     gamma: float = 0.995 # (only used with td learning)
-    lambda_: float = 0.5 # (only used with eligibility traces)
-    sample_lengths: int = 30 # (only used with eligibility traces)
+    lambda_: float = 0.8 # (only used with eligibility traces)
+    sample_lengths: int = 50 # (only used with eligibility traces and only has effect when lambda_ > 0)
     entropy_regulization: float = 0.005 # (only used with policy agents)
 
     # only used with epsilon greedy
@@ -38,7 +38,7 @@ class parameters:
 
     # environment parameters
     env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)
-    render_mode: str = None # (human or None, only use human if very few num_envs (is always human if eval mode)))))
+    render_mode: str = None # (human or None, only use human if very few num_envs and you want to see it play while training (is always human if eval mode))
     continuous: bool = False # (whether the environment is continuous or not)
     num_envs: int = 16
 

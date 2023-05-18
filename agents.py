@@ -138,7 +138,6 @@ class Actorcritic_actor(Actor_Agent):
                     log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
                     error = critic.train(batch_states, batch_new_states, batch_rewards, batch_dones, buffer)
                     loss = torch.mean(-log_policy * error - self.entropy_regulization * entropy_of_policy)
-                    print(error[0], policy[0], entropy_of_policy[0])
                     loss.backward()
                     self.optimizer.step()
                     for f in self.network.parameters():
