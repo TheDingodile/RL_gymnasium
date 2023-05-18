@@ -1,5 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent
+from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic    
 from copy import deepcopy
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from collector import collector
@@ -49,7 +49,7 @@ def reinforce_learn(**args):
     while True:
         action = agent.take_action(state)
         new_state, reward, done, truncated, _ = env.step(action)
-        buffer.save_data((state, action, reward, new_state, done), truncated)
+        buffer.save_data((state, action, reward, done))
         data_collector.collect(reward, done, truncated)
         state = new_state
         agent.train(buffer, baseline_model)
@@ -58,16 +58,16 @@ def reinforce_learn(**args):
 def actor_critic_learn(**args):
     env = get_env(**args)
     state, _ = env.reset()
-    agent_actor = Actor_Agent(env, **args)
-    agent_critic = BaselineAgent(env, **args)
+    agent_actor = Actorcritic_actor(env, **args)
+    agent_critic = Actorcritic_critic(env, **args)
     data_collector = collector(**args)
     buffer = episodic_replay_buffer(**args)
 
     while True:
         action = agent_actor.take_action(state)
         new_state, reward, done, truncated, _ = env.step(action)
-        buffer.save_data((state, action, reward, new_state, done), truncated)
+        buffer.save_data((state, action, reward, done))
         data_collector.collect(reward, done, truncated)
         state = new_state
-        agent.train(buffer, baseline_model)
-        save_experiment(agent, data_collector, **args)
+        agent_actor.train(buffer, agent_critic)
+        save_experiment(agent_actor, data_collector, **args)

@@ -34,14 +34,15 @@ class episodic_replay_buffer():
         self.counter = 0
         self.sample_lengths = sample_lengths
 
-    def save_data(self, data, truncated):
+    def save_data(self, data):
         for i in range(len(data[0])):
             if self.currently_in_idx[i] == None:
                 self.currently_in_idx[i] = self.free.pop()
-            if not truncated[i]:
-                self.buffer[self.currently_in_idx[i]].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i])))
-                self.counter += 1
-            if data[4][i]:
+
+            self.buffer[self.currently_in_idx[i]].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]).type(torch.float32), torch.tensor(data[3][i])))
+            self.counter += 1
+
+            if data[3][i]:
                 self.dones.append(self.currently_in_idx[i])
                 self.currently_in_idx[i] = None
 
@@ -51,34 +52,36 @@ class episodic_replay_buffer():
     def get_data_monte_carlo(self):
         states = []
         actions = []
-        new_states = []
         labels = []
         for i in self.dones:
             self.free.append(i)
             episode = self.buffer[i]
-            [labels.append(label.type(torch.float32)) for label in self.calculate_values_monte_carlo(episode)]
+            [labels.append(label) for label in self.calculate_values_monte_carlo(episode)]
             [states.append(episode[i][0]) for i in range(len(episode))]
             [actions.append(episode[i][1]) for i in range(len(episode))]
-            [new_states.append(episode[i][3]) for i in range(len(episode))]
             self.buffer[i] = []
         self.dones = []
-        return torch.stack(states), torch.stack(actions), torch.stack(labels), torch.stack(new_states)
+        return torch.stack(states), torch.stack(actions), torch.stack(labels)
     
     def get_data_eligibility_traces(self):
         states = []
         actions = []
-        new_states = []
-        labels = []
+        rewards = []
+        dones = []
         for i in self.dones:
+            self.sample_lengths
             self.free.append(i)
             episode = self.buffer[i]
-            [labels.append(label.type(torch.float32)) for label in self.calculate_values_eligibility_traces(episode)]
-            [states.append(episode[i][0]) for i in range(len(episode))]
-            [actions.append(episode[i][1]) for i in range(len(episode))]
-            [new_states.append(episode[i][3]) for i in range(len(episode))]
+            for j in range(0, len(episode), self.sample_lengths):
+                j = min(j, len(episode) - self.sample_lengths - 1)
+                sample = episode[j:j + self.sample_lengths + 1]
+                states.append(torch.stack([i[0] for i in sample]))
+                actions.append(torch.stack([i[1] for i in sample]))
+                rewards.append(torch.stack([i[2] for i in sample]))
+                dones.append(torch.stack([i[3] for i in sample]))
             self.buffer[i] = []
         self.dones = []
-        return torch.stack(states), torch.stack(actions), torch.stack(labels), torch.stack(new_states)
+        return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(dones)
 
     
     def calculate_values_monte_carlo(self, episode):

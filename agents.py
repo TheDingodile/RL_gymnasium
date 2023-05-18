@@ -78,7 +78,7 @@ class REINFORCE_Agent(Actor_Agent):
     def train(self, buffer: episodic_replay_buffer, base_line_model):
         if buffer.is_ready_to_train() == False:
             return
-        states, actions, labels, _ = buffer.get_data_monte_carlo()
+        states, actions, labels = buffer.get_data_monte_carlo()
         for _ in range(self.trains_every_frames):
             for i in range(0, len(states), self.batch_size):
                 batch_states = states[i:i+self.batch_size]
@@ -95,31 +95,56 @@ class REINFORCE_Agent(Actor_Agent):
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
+class Actorcritic_critic(Agent):
+    def __init__(self, env, gamma, lambda_, update_target_every_frames, **args):
+        super().__init__(env, Networks.VNetwork, **args)
+        self.target_network = deepcopy(self.network)
+        self.gamma = gamma
+        self.lambda_ = lambda_
+        self.update_target_every_frames = update_target_every_frames
+
+    def train(self, batch_states, batch_new_states, batch_rewards, batch_dones, buffer: episodic_replay_buffer):
+        values = self.forward(batch_states)
+        values_next = self.target_network(batch_new_states).squeeze(1)
+        target = ((batch_rewards + self.gamma * values_next * (1 - batch_dones.int())).detach()).unsqueeze(1)
+        loss = self.criterion(values, target)
+        loss.backward()
+        self.optimizer.step()
+        for f in self.network.parameters():
+            f.grad *= self.lambda_ * self.gamma
+        return (target - values).detach()
+
 class Actorcritic_actor(Actor_Agent):
-    def __init__(self, env, lambda_, **args):
+    def __init__(self, env, lambda_, gamma, **args):
         super().__init__(env, **args)
         self.lambda_ = lambda_
+        self.gamma = gamma
 
-    def train(self, buffer: episodic_replay_buffer, base_line_model):
+    def train(self, buffer: episodic_replay_buffer, critic: Actorcritic_critic):
+        if (buffer.counter // self.num_envs) % critic.update_target_every_frames == 0:
+            critic.target_network = deepcopy(critic.network)
         if buffer.is_ready_to_train() == False:
             return
-        states, actions, _, new_states = buffer.get_data(monte_carlo=False)
+        states, actions, rewards, dones = buffer.get_data_eligibility_traces()
         for _ in range(self.trains_every_frames):
             for i in range(0, len(states), self.batch_size):
-                batch_states = states[i:i+self.batch_size]
-                batch_actions = actions[i:i+self.batch_size]
-                batch_new_states = new_states[i:i+self.batch_size]
-                policy = self.forward(batch_states)
-                log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
-                if base_line_model != None:
-                    base_line_model.train(batch_states, batch_labels)
-                    baseline = base_line_model.forward(batch_states)
-                    batch_labels = batch_labels - baseline
-                loss = torch.mean(-log_policy * batch_labels - self.entropy_regulization * entropy_of_policy)
-                loss.backward()
-                self.optimizer.step()
+                for j in range(states.shape[1] - 1):
+                    batch_states = states[i:i+self.batch_size, j]
+                    batch_actions = actions[i:i+self.batch_size, j]
+                    batch_rewards = rewards[i:i+self.batch_size, j]
+                    batch_dones = dones[i:i+self.batch_size, j]
+                    batch_new_states = states[i:i+self.batch_size, j+1]
+                    policy = self.forward(batch_states)
+                    log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
+                    error = critic.train(batch_states, batch_new_states, batch_rewards, batch_dones, buffer)
+                    loss = torch.mean(-log_policy * error - self.entropy_regulization * entropy_of_policy)
+                    print(error[0], policy[0], entropy_of_policy[0])
+                    loss.backward()
+                    self.optimizer.step()
+                    for f in self.network.parameters():
+                        f.grad *= self.lambda_ * self.gamma
                 self.optimizer.zero_grad()
-
+                critic.optimizer.zero_grad()
 
 class BaselineAgent(Agent):
     def __init__(self, env, **args):

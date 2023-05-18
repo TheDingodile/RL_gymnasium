@@ -81,3 +81,7 @@ This file holds a class which holds all the exploration methods. This makes it e
 
 
 
+Some hyper-parameter configurations could also cause the program to crash. Eg. A too high learning rate could make some models diverge. This is especially a potential issue in the monte carlo methods, as the variance is quite high here.
+
+
+
