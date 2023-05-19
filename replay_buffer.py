@@ -25,12 +25,13 @@ class replay_buffer():
     
 class episodic_replay_buffer():
     def __init__(self, num_envs, episodes_before_train, gamma, sample_lengths, **args):
+        self.episodes_before_train = episodes_before_train
+        episode_slots = max(num_envs + episodes_before_train, episodes_before_train * 2)    
         self.gamma = gamma
-        self.episodes_before_train = max(num_envs, episodes_before_train)
-        self.free = list(range(self.episodes_before_train * 2))
+        self.free = list(range(episode_slots))
         self.dones = []
-        self.currently_in_idx = {env_number: None for env_number in range(self.episodes_before_train)}
-        self.buffer = [[] for _ in range(self.episodes_before_train * 2)]
+        self.currently_in_idx = {env_number: None for env_number in range(episode_slots)}
+        self.buffer = [[] for _ in range(episode_slots)]
         self.counter = 0
         self.sample_lengths = sample_lengths
 
@@ -68,13 +69,19 @@ class episodic_replay_buffer():
         actions = []
         rewards = []
         dones = []
+
+        sample_length = self.sample_lengths
+        for k in self.dones:
+            episode_length = len(self.buffer[k])
+            if episode_length < sample_length:
+                sample_length = episode_length
+
         for i in self.dones:
-            self.sample_lengths
             self.free.append(i)
             episode = self.buffer[i]
-            for j in range(0, len(episode), self.sample_lengths):
-                j = min(j, len(episode) - self.sample_lengths - 1)
-                sample = episode[j:j + self.sample_lengths + 1]
+            for j in range(0, len(episode), sample_length):
+                j = min(j, len(episode) - sample_length)
+                sample = episode[j:j + sample_length]
                 states.append(torch.stack([i[0] for i in sample]))
                 actions.append(torch.stack([i[1] for i in sample]))
                 rewards.append(torch.stack([i[2] for i in sample]))

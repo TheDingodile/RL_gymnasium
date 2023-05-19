@@ -1,6 +1,6 @@
 ---------
 parameters: 
-name: test
+name: ActorCritic_cartpole
 train_loop: actor_critic_learn
 exploration: Explorations.multinomial
 batch_size: 512
@@ -9,7 +9,7 @@ weight_decay: 1e-05
 trains_every_frames: 1
 train_after_frames: 50000
 buffer_size: 200000
-update_target_every_frames: 4000
+update_target_every_frames: 2000
 episodes_before_train: 1
 baseline_model: True
 gamma: 0.995

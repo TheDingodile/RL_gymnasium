@@ -103,7 +103,7 @@ class Actorcritic_critic(Agent):
         self.lambda_ = lambda_
         self.update_target_every_frames = update_target_every_frames
 
-    def train(self, batch_states, batch_new_states, batch_rewards, batch_dones, buffer: episodic_replay_buffer):
+    def train(self, batch_states, batch_new_states, batch_rewards, batch_dones):
         values = self.forward(batch_states)
         values_next = self.target_network(batch_new_states).squeeze(1)
         target = ((batch_rewards + self.gamma * values_next * (1 - batch_dones.int())).detach()).unsqueeze(1)
@@ -128,15 +128,28 @@ class Actorcritic_actor(Actor_Agent):
         states, actions, rewards, dones = buffer.get_data_eligibility_traces()
         for _ in range(self.trains_every_frames):
             for i in range(0, len(states), self.batch_size):
-                for j in range(states.shape[1] - 1):
+                for j in range(states.shape[1]):
+                    batch_dones = dones[i:i+self.batch_size, j]
                     batch_states = states[i:i+self.batch_size, j]
                     batch_actions = actions[i:i+self.batch_size, j]
                     batch_rewards = rewards[i:i+self.batch_size, j]
-                    batch_dones = dones[i:i+self.batch_size, j]
-                    batch_new_states = states[i:i+self.batch_size, j+1]
+                    batch_new_states = states[i:i+self.batch_size, (j+1) % states.shape[1]]
+
+                    # This part deals with the fact that our episode slice only sometimes ends with a done.
+                    # If it does not, we can't use the next state for training, so we just skip it.
+                    last_time_step = (j == states.shape[1] - 1)
+                    if last_time_step:
+                        batch_states = batch_states[batch_dones == True]
+                        batch_actions = batch_actions[batch_dones == True]
+                        batch_rewards = batch_rewards[batch_dones == True]
+                        batch_new_states = batch_new_states[batch_dones == True]
+                        batch_dones = batch_dones[batch_dones == True]
+                        if len(batch_states) == 0:
+                            continue
+
                     policy = self.forward(batch_states)
                     log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
-                    error = critic.train(batch_states, batch_new_states, batch_rewards, batch_dones, buffer)
+                    error = critic.train(batch_states, batch_new_states, batch_rewards, batch_dones)
                     loss = torch.mean(-log_policy * error - self.entropy_regulization * entropy_of_policy)
                     loss.backward()
                     self.optimizer.step()
