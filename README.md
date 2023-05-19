@@ -9,7 +9,7 @@ git clone
 cd RL_gymnasium
 pip install -r requirements.txt
 ```
-For windows, often the gymnasium can only install if you have installed [Swig](http://www.swig.org/download.html) and added it to your path.
+For windows, often the gymnasium can only install if you have installed [Swig](http://www.swig.org/download.html) and added it to your path. Another common problem is the error "Microsoft Visual C++ 14.0 or greater is required". Here you can install microsoft build tools and install the necessary dependencies".
 
 ## Usage
 
