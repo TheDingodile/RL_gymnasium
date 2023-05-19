@@ -152,6 +152,13 @@ class Actorcritic_actor(Actor_Agent):
                     error = critic.train(batch_states, batch_new_states, batch_rewards, batch_dones)
                     loss = torch.mean(-log_policy * error - self.entropy_regulization * entropy_of_policy)
                     loss.backward()
+                    # total_norm = 0
+                    # for p in self.network.parameters():
+                    #     param_norm = p.grad.detach().data.norm(2)
+                    #     total_norm += param_norm.item() ** 2
+                    # total_norm = total_norm ** 0.5
+                    # print(str(total_norm)[:4], end=" ")
+                    torch.nn.utils.clip_grad_norm_(self.network.parameters(), 10)
                     self.optimizer.step()
                     for f in self.network.parameters():
                         f.grad *= self.lambda_ * self.gamma
