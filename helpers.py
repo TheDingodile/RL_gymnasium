@@ -47,7 +47,6 @@ def get_action_space(env, continuous, **args):
 def eval_mode(**args):
     args["num_envs"] = 1
     args["render_mode"] = "human"
-    args["exploration"] = Explorations.greedy
     # open txt file
     with open('trained_agents/' + args["name"] + '/parameters.txt', 'r') as f:
         # wait for line with train_loop
@@ -60,6 +59,13 @@ def eval_mode(**args):
             # if no more lines break
             if line == "":
                 break
+    if args["train_loop"].__name__ == "deep_q_learn":
+        args["exploration"] = Explorations.greedy
+    elif args["train_loop"].__name__ == "reinforce_learn" or args["train_loop"].__name__ == "actor_critic_learn":
+        args["exploration"] = Explorations.multinomial
+    if args["continuous"]:
+        args["exploration"] = Explorations.normal_distribution
+
     return args
 
 def save_experiment(agent, data_collector, name, save_agent_every, **args):
