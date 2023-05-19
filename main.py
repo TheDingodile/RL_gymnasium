@@ -5,7 +5,7 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "ActorCritic_lunarlander2" # (name of the trained agent)
+    name: str = "test" # (name of the trained agent)
     train_loop: Callable = actor_critic_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.multinomial # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
@@ -19,17 +19,17 @@ class parameters:
     # only used with a replay buffer
     train_after_frames: int = 50000
     buffer_size: int = 200000
-    update_target_every_frames: int = 2000
+    update_target_every_frames: int = 1000
 
     # only used with learning from episodes (eg. REINFORCE or actor critic)
     episodes_before_train: int = 1 # (How many episodes is played before we train on them. Higher number is faster but less efficient)
     baseline_model: bool = True # (whether to use a baseline or not (for advantage function estimation))
 
     # agent parameters
-    gamma: float = 0.995 # (only used with td learning)
+    gamma: float = 0.99 # (only used with td learning)
     lambda_: float = 0.9 # (only used with eligibility traces)
-    sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 0.1 # (only used with policy agents)
+    sample_lengths: int = 100 # (only used with eligibility traces and only has effect when lambda_ > 0)
+    entropy_regulization: float = 0.2 # (only used with policy agents)
 
     # only used with epsilon greedy
     epsilon_start: float = 0.9

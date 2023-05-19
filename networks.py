@@ -22,15 +22,16 @@ class Network:
     def __init__(self, network: Networks, env, continuous, **args):
         self.action_space = get_action_space(env, continuous)
         self.state_space_size = env.observation_space.shape[1]
-        self.base_network = nn.Sequential(nn.Linear(self.state_space_size, 64), 
-                                        nn.LeakyReLU(), nn.Linear(64, 32), 
+        last_hidden_layer_size = 64
+        self.base_network = nn.Sequential(nn.Linear(self.state_space_size, last_hidden_layer_size), 
+                                        nn.LeakyReLU(), 
                                         nn.LeakyReLU())
         if network == Networks.QNetwork:
-            self.network = nn.Sequential(self.base_network, nn.Linear(32, self.action_space))
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space))
         elif network == Networks.VNetwork:
-            self.network = nn.Sequential(self.base_network, nn.Linear(32, 1))
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, 1))
         elif network == Networks.Actor_Network:
-            self.network = nn.Sequential(self.base_network, nn.Linear(32, self.action_space), nn.Softmax(dim=1))
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1))
         elif network == Networks.Normal_distribution:
             mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
-            self.network = nn.Sequential(self.base_network, nn.Linear(32, self.action_space), nn.Tanh(), Multiply(mult))    
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult))    
