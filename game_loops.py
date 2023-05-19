@@ -49,7 +49,7 @@ def reinforce_learn(**args):
     while True:
         action = agent.take_action(state)
         new_state, reward, done, truncated, _ = env.step(action)
-        buffer.save_data((state, action, reward, done))
+        buffer.save_data((state, action, reward, done), truncated)
         data_collector.collect(reward, done, truncated)
         state = new_state
         agent.train(buffer, baseline_model)
@@ -66,7 +66,7 @@ def actor_critic_learn(**args):
     while True:
         action = agent_actor.take_action(state)
         new_state, reward, done, truncated, _ = env.step(action)
-        buffer.save_data((state, action, reward, done))
+        buffer.save_data((state, action, reward, done), truncated)
         data_collector.collect(reward, done, truncated)
         state = new_state
         agent_actor.train(buffer, agent_critic)

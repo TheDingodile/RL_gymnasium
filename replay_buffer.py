@@ -35,7 +35,7 @@ class episodic_replay_buffer():
         self.counter = 0
         self.sample_lengths = sample_lengths
 
-    def save_data(self, data):
+    def save_data(self, data, truncated):
         for i in range(len(data[0])):
             if self.currently_in_idx[i] == None:
                 self.currently_in_idx[i] = self.free.pop()
@@ -43,7 +43,7 @@ class episodic_replay_buffer():
             self.buffer[self.currently_in_idx[i]].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]).type(torch.float32), torch.tensor(data[3][i])))
             self.counter += 1
 
-            if data[3][i]:
+            if data[3][i] or truncated[i]:
                 self.dones.append(self.currently_in_idx[i])
                 self.currently_in_idx[i] = None
 
