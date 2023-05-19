@@ -22,9 +22,10 @@ class Network:
     def __init__(self, network: Networks, env, continuous, **args):
         self.action_space = get_action_space(env, continuous)
         self.state_space_size = env.observation_space.shape[1]
-        last_hidden_layer_size = 64
-        self.base_network = nn.Sequential(nn.Linear(self.state_space_size, last_hidden_layer_size), 
+        last_hidden_layer_size = 32
+        self.base_network = nn.Sequential(nn.Linear(self.state_space_size, 64), 
                                         nn.LeakyReLU(), 
+                                        nn.Linear(64, last_hidden_layer_size),
                                         nn.LeakyReLU())
         if network == Networks.QNetwork:
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space))
