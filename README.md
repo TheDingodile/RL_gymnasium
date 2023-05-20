@@ -79,7 +79,7 @@ This file has all the different agents and their training methods. There is a su
 This file holds a class which holds all the exploration methods. This makes it easy to choose what exploration method you want to use.
 
 
-
+Right now for continious environments a normal distribution is used. It has a hardcoded diagonal covariance matrix with a standard deviation of 0.2. 
 
 Some hyper-parameter configurations could also cause the program to crash. Eg. A too high learning rate could make some models diverge. This is especially a potential issue in the monte carlo methods, as the variance is quite high here.
 

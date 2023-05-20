@@ -6,7 +6,7 @@ exploration: Explorations.linearly_decaying_eps_greedy
 batch_size: 512
 learning_rate: 0.001
 weight_decay: 1e-05
-trains_every_frames: 2
+trains_every_frames: 1
 train_after_frames: 20000
 buffer_size: 200000
 update_target_every_frames: 1000
@@ -17,8 +17,8 @@ lambda_: 0.9
 sample_lengths: 100
 entropy_regulization: 0.2
 epsilon_start: 0.9
-epsilon_end: 0.1
-decay_period_of_epsilon: 100000
+epsilon_end: 0
+decay_period_of_epsilon: 200000
 env_name: CartPole-v1
 render_mode: None
 continuous: False
