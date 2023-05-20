@@ -11,6 +11,10 @@ def eval(**args):
     state, _ = env.reset()
     if args['train_loop'] == "deep_q_learn":
         agent = QAgent(env, **args)
+    elif args['train_loop'] == "reinforce_learn":
+        agent = REINFORCE_Agent(env, **args)
+    elif args['train_loop'] == "actor_critic_learn":
+        agent = Actorcritic_actor(env, **args)
     agent.network.load_state_dict(torch.load("trained_agents/" + args["name"] + "/model.pt"))
     while True:
         action = agent.take_action(state)

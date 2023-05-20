@@ -5,19 +5,19 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "test" # (name of the trained agent)
-    train_loop: Callable = actor_critic_learn # (choose between deep q learning, policy gradient, actor critic, eval)
-    exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
+    name: str = "deep_q_learn_cartpole" # (name of the trained agent)
+    train_loop: Callable = deep_q_learn # (choose between deep q learning, policy gradient, actor critic, eval)
+    exploration: Explorations = Explorations.linearly_decaying_eps_greedy # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
     batch_size: int = 512
-    learning_rate: float = 2e-4 # (if multiple agents are used this learning rate is used for all of them)
+    learning_rate: float = 1e-3 # (if multiple agents are used this learning rate is used for all of them)
     weight_decay: float = 1e-5
-    trains_every_frames: int = 1
+    trains_every_frames: int = 2
 
     # only used with a replay buffer
-    train_after_frames: int = 50000
+    train_after_frames: int = 20000
     buffer_size: int = 200000
     update_target_every_frames: int = 1000
 
@@ -26,7 +26,7 @@ class parameters:
     baseline_model: bool = True # (whether to use a baseline or not (for advantage function estimation))
 
     # agent parameters
-    gamma: float = 0.99 # (only used with td learning)
+    gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.9 # (only used with eligibility traces)
     sample_lengths: int = 100 # (only used with eligibility traces and only has effect when lambda_ > 0)
     entropy_regulization: float = 0.2 # (only used with policy agents)
@@ -34,13 +34,13 @@ class parameters:
     # only used with epsilon greedy
     epsilon_start: float = 0.9
     epsilon_end: float = 0.1
-    decay_period_of_epsilon: int = 200000
+    decay_period_of_epsilon: int = 100000
 
     # environment parameters
-    env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)
+    env_name: str = "CartPole-v1" # (choose between LunarLander-v2, CartPole-v1, etc.)
     render_mode: str = None # (human or None, only use human if very few num_envs and you want to see it play while training (is always human if eval mode))
-    continuous: bool = True # (whether the environment is continuous or not)
-    num_envs: int = 2
+    continuous: bool = False # (whether the environment is continuous or not)
+    num_envs: int = 16 # (how many environments to run in parallel)
 
     # extra parameters
     save_agent_every: int = 40000 # (how many frames before screenshot of agent and it's performance is saved)

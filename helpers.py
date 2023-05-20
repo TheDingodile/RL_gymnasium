@@ -40,7 +40,7 @@ def write_parameters(params):
 
 def get_action_space(env, continuous, **args):
     if continuous:
-        return env.action_space.shape[0]
+        return env.action_space.shape[1]
     else:
         return env.action_space[0].n
 
@@ -56,12 +56,14 @@ def eval_mode(**args):
                 args["train_loop"] = line.split("train_loop: ")[1].strip()
             if line.startswith("continuous: "):
                 args["continuous"] = line.split("continuous: ")[1].strip() == "True"
+            if line.startswith("env_name: "):
+                args["env_name"] = line.split("env_name: ")[1].strip()
             # if no more lines break
             if line == "":
                 break
-    if args["train_loop"].__name__ == "deep_q_learn":
+    if args["train_loop"] == "deep_q_learn":
         args["exploration"] = Explorations.greedy
-    elif args["train_loop"].__name__ == "reinforce_learn" or args["train_loop"].__name__ == "actor_critic_learn":
+    elif args["train_loop"] == "reinforce_learn" or args["train_loop"] == "actor_critic_learn":
         args["exploration"] = Explorations.multinomial
     if args["continuous"]:
         args["exploration"] = Explorations.normal_distribution

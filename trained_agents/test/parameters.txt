@@ -2,9 +2,9 @@
 parameters: 
 name: test
 train_loop: actor_critic_learn
-exploration: Explorations.multinomial
+exploration: Explorations.normal_distribution
 batch_size: 512
-learning_rate: 0.001
+learning_rate: 0.0002
 weight_decay: 1e-05
 trains_every_frames: 1
 train_after_frames: 50000
@@ -21,8 +21,8 @@ epsilon_end: 0.1
 decay_period_of_epsilon: 200000
 env_name: LunarLander-v2
 render_mode: None
-continuous: False
-num_envs: 1
+continuous: True
+num_envs: 2
 save_agent_every: 40000
 measure_performance_every: 40000
 ---------
