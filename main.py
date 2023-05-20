@@ -5,8 +5,8 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "test" # (name of the trained agent)
-    train_loop: Callable = reinforce_learn # (choose between deep q learning, policy gradient, actor critic, eval)
+    name: str = "REINFORCE_with_baseline_lunarlander_continuous" # (name of the trained agent)
+    train_loop: Callable = eval # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
