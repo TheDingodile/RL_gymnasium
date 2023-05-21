@@ -1,5 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent  
+from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_online_Agent
 from copy import deepcopy
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from collector import collector
@@ -87,6 +87,20 @@ def PPO_learn(**args):
         state = new_state
         agent_actor.train(buffer, value_agent)
         save_experiment(agent_actor, data_collector, **args)
+
+def PPO_learn_online(**args):
+    env = get_env(**args)
+    state, _ = env.reset()
+    agent = PPO_online_Agent(env, **args)
+    data_collector = collector(**args)
+    while True:
+        action, log_probs = agent.take_action(state)
+        new_state, reward, done, truncated, info = env.step(action)
+        data_collector.collect(reward, done, truncated)
+        agent.train(state, action, new_state, reward, done, log_probs, info)
+        state = new_state
+        save_experiment(agent, data_collector, **args)
+
 
 def get_agent(env, **args):
     if args['train_loop'] == "deep_q_learn":

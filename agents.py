@@ -177,7 +177,6 @@ class BaselineAgent(Agent):
         loss = self.criterion(values, batch_labels.unsqueeze(1))
         loss.backward()
         self.optimizer.step()
-        torch.nn.utils.clip_grad_norm_(self.network.parameters(), 1)
         self.optimizer.zero_grad()
         return values.detach().squeeze(1)
 
@@ -227,3 +226,50 @@ class PPO_Agent(Actor_Agent):
                     loss.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
+
+class PPO_online_Agent(Agent):
+    def __init__(self, env, entropy_regulization, epsilon_clip, gamma, **args):
+        continuous = args.get("continuous", False)
+        super().__init__(env, Networks.Policy_advantage_network if continuous else Networks.Policy_advantage_network , **args)
+        self.entropy_regulization = entropy_regulization
+        self.continuous = continuous
+        self.epsilon_clip = epsilon_clip
+        self.gamma = gamma
+
+    def train(self, states, actions, new_states, rewards, dones, log_probs, info):
+        if 'final_observation' in info:
+            for i, s in enumerate(info['final_observation']):
+                if s is not None:
+                    # if dones[i] == False:
+                    #     print(new_states[i], s)
+                    new_states[i] = s
+
+        for _ in range(self.trains_every_frames):
+            output = self.forward(torch.tensor(states))
+            policies, values = output[:, :-1], output[:, -1]
+            log_policies, entropy_of_policies = self.log_policy(policies, torch.tensor(actions))
+            ratio = torch.exp(log_policies - log_probs)
+            values_next = self.network.forward(torch.tensor(new_states)).detach()[:, -1]
+            target = ((torch.tensor(rewards).type(torch.float32) + self.gamma * values_next * (1 - torch.tensor(dones).int())).detach())
+            advantage = target - values
+            surr1 = ratio * advantage.detach()
+            surr2 = torch.clamp(ratio, 1 - self.epsilon_clip, 1 + self.epsilon_clip) * advantage.detach()
+            loss = torch.mean(-torch.min(surr1, surr2) - self.entropy_regulization * entropy_of_policies + 0.5 * advantage ** 2)
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+
+    def take_action(self, state):
+        output = self.forward(torch.tensor(state))
+        policy, _ = output[:, :-1], output[:, -1]
+        action = self.exploration.explore(policy)
+        return action, self.log_policy(policy, torch.tensor(action))[0].detach()
+
+
+    def log_policy(self, policy, actions):
+        if self.continuous:
+            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+        else:
+            log_policy = torch.log(policy)
+            entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
+            return torch.gather(log_policy, 1, actions.unsqueeze(1)).squeeze(1), entropy_of_policy
