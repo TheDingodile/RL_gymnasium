@@ -9,6 +9,7 @@ class Networks(Enum):
     VNetwork = 1
     Actor_Network = 2
     Normal_distribution = 3
+    Policy_advantage_network = 4
 
 class Multiply(nn.Module):
     def __init__(self, alpha):
@@ -17,6 +18,16 @@ class Multiply(nn.Module):
     
     def forward(self, x):
         return x * self.alpha
+    
+class ParallelModule(nn.Sequential):
+    def __init__(self, *args):
+        super(ParallelModule, self).__init__( *args )
+
+    def forward(self, input):
+        output = []
+        for module in self:
+            output.append( module(input) )
+        return torch.cat( output, dim=1 )
 
 class Network:
     def __init__(self, network: Networks, env, continuous, **args):
@@ -35,4 +46,6 @@ class Network:
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1))
         elif network == Networks.Normal_distribution:
             mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
-            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult))    
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult))
+        elif network == Networks.Policy_advantage_network:
+            self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1)), nn.Linear(last_hidden_layer_size, 1)))
