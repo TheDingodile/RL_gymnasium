@@ -23,7 +23,9 @@ class Agent():
         self.criterion = nn.MSELoss()
 
     def take_action(self, state):
-        return self.exploration.explore(self.forward(torch.tensor(state)))
+        policy = self.forward(torch.tensor(state))
+        action = self.exploration.explore(policy)
+        return action
     
     def forward(self, state):
         return self.network(state)
@@ -62,6 +64,14 @@ class Actor_Agent(Agent):
 
     def train(self, buffer: episodic_replay_buffer, base_line_model):
         pass
+
+    def take_action(self, state, output_log_prob=False):
+        policy = self.forward(torch.tensor(state))
+        action = self.exploration.explore(policy)
+        if output_log_prob:
+            return action, self.log_policy(policy, torch.tensor(action))[0].detach()
+        else:
+            return action
 
     def log_policy(self, policy, actions):
         if self.continuous:
@@ -167,7 +177,53 @@ class BaselineAgent(Agent):
         loss = self.criterion(values, batch_labels.unsqueeze(1))
         loss.backward()
         self.optimizer.step()
+        torch.nn.utils.clip_grad_norm_(self.network.parameters(), 1)
         self.optimizer.zero_grad()
+        return values.detach().squeeze(1)
 
 class PPO_Agent(Actor_Agent):
-    pass
+    def __init__(self, env, epsilon_clip, gamma, **args):
+        self.epsilon_clip = epsilon_clip
+        self.gamma = gamma
+        super().__init__(env, **args)
+
+    def train(self, buffer: episodic_replay_buffer, base_line_model: BaselineAgent):
+        if buffer.is_ready_to_train() == False:
+            return
+        states, actions, rewards, dones, log_probs = buffer.get_data_eligibility_traces()
+        for _ in range(self.trains_every_frames):
+            for i in range(0, len(states), self.batch_size):
+                for j in range(states.shape[1]):
+                    batch_states = states[i:i+self.batch_size, j]
+                    batch_actions = actions[i:i+self.batch_size, j]
+                    batch_rewards = rewards[i:i+self.batch_size, j]
+                    batch_dones = dones[i:i+self.batch_size, j]
+                    batch_log_probs = log_probs[i:i+self.batch_size, j]
+                    batch_new_states = states[i:i+self.batch_size, (j+1) % states.shape[1]]
+
+                    # This part deals with the fact that our episode slice only sometimes ends with a done.
+                    # If it does not, we can't use the next state for training, so we just skip it.
+                    last_time_step = (j == states.shape[1] - 1)
+                    if last_time_step:
+                        batch_states = batch_states[batch_dones == True]
+                        batch_actions = batch_actions[batch_dones == True]
+                        batch_rewards = batch_rewards[batch_dones == True]
+                        batch_new_states = batch_new_states[batch_dones == True]
+                        batch_log_probs = batch_log_probs[batch_dones == True]
+                        batch_dones = batch_dones[batch_dones == True]
+                        if len(batch_states) == 0:
+                            continue
+
+                    policy = self.forward(batch_states)
+                    log_policy, entropy_of_policy = self.log_policy(policy, batch_actions)
+                    ratio = torch.exp(log_policy - batch_log_probs)
+                    values_next = base_line_model.forward(batch_new_states).detach().squeeze(1)
+                    target = ((batch_rewards + self.gamma * values_next * (1 - batch_dones.int())).detach())
+                    values = base_line_model.train(batch_states, target)
+                    advantage = target - values
+                    surr1 = ratio * advantage
+                    surr2 = torch.clamp(ratio, 1 - self.epsilon_clip, 1 + self.epsilon_clip) * advantage  
+                    loss = torch.mean(-torch.min(surr1, surr2) - self.entropy_regulization * entropy_of_policy)
+                    loss.backward()
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()

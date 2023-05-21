@@ -24,7 +24,7 @@ class replay_buffer():
         return states, actions, rewards, next_states, dones
     
 class episodic_replay_buffer():
-    def __init__(self, num_envs, episodes_before_train, gamma, sample_lengths, **args):
+    def __init__(self, num_envs, episodes_before_train, gamma, sample_lengths, log_probs = False, **args):
         self.episodes_before_train = episodes_before_train
         episode_slots = max(num_envs + episodes_before_train, episodes_before_train * 2)    
         self.gamma = gamma
@@ -34,13 +34,20 @@ class episodic_replay_buffer():
         self.buffer = [[] for _ in range(episode_slots)]
         self.counter = 0
         self.sample_lengths = sample_lengths
+        self.log_probs = log_probs
 
     def save_data(self, data, truncated):
         for i in range(len(data[0])):
             if self.currently_in_idx[i] == None:
                 self.currently_in_idx[i] = self.free.pop()
 
-            self.buffer[self.currently_in_idx[i]].append((torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]).type(torch.float32), torch.tensor(data[3][i])))
+            # This if statement simply checks if we also want to save the log_probs (for PPO)
+            if self.log_probs:
+                d = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]).type(torch.float32), torch.tensor(data[3][i]), data[4][i])
+            else:
+                d = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]).type(torch.float32), torch.tensor(data[3][i]))
+            
+            self.buffer[self.currently_in_idx[i]].append(d)
             self.counter += 1
 
             if data[3][i] or truncated[i]:
@@ -69,6 +76,8 @@ class episodic_replay_buffer():
         actions = []
         rewards = []
         dones = []
+        if self.log_probs:
+            log_probs = []
 
         sample_length = self.sample_lengths
         for k in self.dones:
@@ -86,10 +95,32 @@ class episodic_replay_buffer():
                 actions.append(torch.stack([i[1] for i in sample]))
                 rewards.append(torch.stack([i[2] for i in sample]))
                 dones.append(torch.stack([i[3] for i in sample]))
+                if self.log_probs:
+                    log_probs.append(torch.stack([i[4] for i in sample]))
             self.buffer[i] = []
         self.dones = []
-        return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(dones)
+        if self.log_probs:
+            return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(dones), torch.stack(log_probs)
+        else:
+            return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(dones)
 
+    def get_data_PPO(self):
+        states = []
+        actions = []
+        rewards = []
+        dones = []
+        log_probs = []
+        for i in self.dones:
+            self.free.append(i)
+            episode = self.buffer[i]
+            [states.append(episode[i][0]) for i in range(len(episode))]
+            [actions.append(episode[i][1]) for i in range(len(episode))]
+            [rewards.append(episode[i][2]) for i in range(len(episode))]
+            [dones.append(episode[i][3]) for i in range(len(episode))]
+            [log_probs.append(episode[i][4]) for i in range(len(episode))]
+            self.buffer[i] = []
+        self.dones = []
+        return torch.stack(states), torch.stack(actions), torch.stack(rewards), torch.stack(dones), torch.stack(log_probs)
     
     def calculate_values_monte_carlo(self, episode):
         rewards = [episode[i][2] for i in range(len(episode))]
