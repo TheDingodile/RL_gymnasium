@@ -1,0 +1,29 @@
+---------
+parameters: 
+name: PPO_test
+train_loop: PPO_learn
+exploration: Explorations.multinomial
+batch_size: 16
+learning_rate: 0.001
+weight_decay: 1e-05
+trains_every_frames: 4
+train_after_frames: 20000
+buffer_size: 200000
+update_target_every_frames: 1000
+episodes_before_train: 2
+baseline_model: True
+gamma: 0.995
+lambda_: 0.9
+sample_lengths: 100
+entropy_regulization: 2
+epsilon_clip: 0.1
+epsilon_start: 0.9
+epsilon_end: 0.1
+decay_period_of_epsilon: 200000
+env_name: CartPole-v1
+render_mode: None
+continuous: False
+num_envs: 2
+save_agent_every: 40000
+measure_performance_every: 10000
+---------
