@@ -1,18 +1,18 @@
 from typing import Callable
 from helpers import run
-from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_online
+from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_online, PPO_learn_batches
 from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "PPO_lunarlander" # (name of the trained agent)
-    train_loop: Callable = PPO_learn_online # (choose between deep q learning, policy gradient, actor critic, eval)
+    name: str = "PPO_lunarlander_batch" # (name of the trained agent)
+    train_loop: Callable = PPO_learn_batches # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.multinomial # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
-    batch_size: int = 128
-    learning_rate: float = 2e-4 # (if multiple agents are used this learning rate is used for all of them)
+    batch_size: int = 512
+    learning_rate: float = 5e-4 # (if multiple agents are used this learning rate is used for all of them)
     weight_decay: float = 1e-5
     trains_every_frames: int = 1
 
@@ -22,14 +22,14 @@ class parameters:
     update_target_every_frames: int = 1000
 
     # only used with learning from episodes (eg. REINFORCE or actor critic)
-    episodes_before_train: int = 4 # (How many episodes is played before we train on them. Higher number is faster but less efficient)
+    episodes_before_train: int = 32 # (How many episodes is played before we train on them. Higher number is faster but less efficient)
     baseline_model: bool = True # (whether to use a baseline or not (for advantage function estimation))
 
     # agent parameters
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.8 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 0.5 # (only used with policy agents)
+    entropy_regulization: float = 0.02 # (only used with policy agents)
     epsilon_clip: float = 0.1 # (only used with PPO)
 
     # only used with epsilon greedy

@@ -227,7 +227,7 @@ class PPO_Agent(Actor_Agent):
                     self.optimizer.step()
                     self.optimizer.zero_grad()
 
-class PPO_online_Agent(Agent):
+class PPO_dual_network_Agent(Agent):
     def __init__(self, env, entropy_regulization, epsilon_clip, gamma, **args):
         continuous = args.get("continuous", False)
         super().__init__(env, Networks.Policy_advantage_network if continuous else Networks.Policy_advantage_network , **args)
@@ -236,21 +236,14 @@ class PPO_online_Agent(Agent):
         self.epsilon_clip = epsilon_clip
         self.gamma = gamma
 
-    def train(self, states, actions, new_states, rewards, dones, log_probs, info):
-        if 'final_observation' in info:
-            for i, s in enumerate(info['final_observation']):
-                if s is not None:
-                    # if dones[i] == False:
-                    #     print(new_states[i], s)
-                    new_states[i] = s
-
+    def train(self, states, actions, new_states, rewards, dones, log_probs):
         for _ in range(self.trains_every_frames):
-            output = self.forward(torch.tensor(states))
+            output = self.forward(states)
             policies, values = output[:, :-1], output[:, -1]
-            log_policies, entropy_of_policies = self.log_policy(policies, torch.tensor(actions))
+            log_policies, entropy_of_policies = self.log_policy(policies, actions)
             ratio = torch.exp(log_policies - log_probs)
-            values_next = self.network.forward(torch.tensor(new_states)).detach()[:, -1]
-            target = ((torch.tensor(rewards).type(torch.float32) + self.gamma * values_next * (1 - torch.tensor(dones).int())).detach())
+            values_next = self.network.forward(new_states).detach()[:, -1]
+            target = ((rewards.type(torch.float32) + self.gamma * values_next * (1 - dones.int())).detach())
             advantage = target - values
             surr1 = ratio * advantage.detach()
             surr2 = torch.clamp(ratio, 1 - self.epsilon_clip, 1 + self.epsilon_clip) * advantage.detach()

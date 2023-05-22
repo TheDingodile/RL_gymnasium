@@ -1,5 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_online_Agent
+from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_dual_network_Agent
 from copy import deepcopy
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from collector import collector
@@ -88,18 +88,26 @@ def PPO_learn(**args):
         agent_actor.train(buffer, value_agent)
         save_experiment(agent_actor, data_collector, **args)
 
-def PPO_learn_online(**args):
+def PPO_learn_batches(**args):
     env = get_env(**args)
     state, _ = env.reset()
-    agent = PPO_online_Agent(env, **args)
+    agent = PPO_dual_network_Agent(env, **args)
     data_collector = collector(**args)
+    buffer = replay_buffer(log_probs=True, **args)
     while True:
-        action, log_probs = agent.take_action(state)
-        new_state, reward, done, truncated, info = env.step(action)
-        data_collector.collect(reward, done, truncated)
-        agent.train(state, action, new_state, reward, done, log_probs, info)
-        state = new_state
-        save_experiment(agent, data_collector, **args)
+        for _ in range(40000 // args["num_envs"]):
+            action, log_prob = agent.take_action(state)
+            new_state, reward, done, truncated, info = env.step(action)
+            buffer.save_data((state, action, reward, new_state, done, log_prob), truncated)
+            data_collector.collect(reward, done, truncated)
+            state = new_state
+            save_experiment(agent, data_collector, **args)
+
+        for _ in range(400):
+            states, actions, rewards, next_states, dones, log_probs = buffer.get_batch()
+            agent.train(states, actions, next_states, rewards, dones, log_probs)
+        buffer.buffer = [None for _ in range(buffer.buffer_size)]
+        buffer.counter = 0
 
 
 def get_agent(env, **args):

@@ -2,7 +2,8 @@ import torch
 import numpy as np
 
 class replay_buffer():
-    def __init__(self, buffer_size, batch_size, **args):
+    def __init__(self, buffer_size, batch_size, log_probs=False, **args):
+        self.log_probs = log_probs
         self.counter = 0
         self.buffer_size = buffer_size
         self.batch_size = batch_size
@@ -11,7 +12,10 @@ class replay_buffer():
     def save_data(self, data, truncated):
         for i in range(len(data[0])):
             if not truncated[i]:
-                self.buffer[self.counter % self.buffer_size] = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i]))
+                if self.log_probs:
+                    self.buffer[self.counter % self.buffer_size] = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i]), data[5][i])
+                else:
+                    self.buffer[self.counter % self.buffer_size] = (torch.tensor(data[0][i]), torch.tensor(data[1][i]), torch.tensor(data[2][i]), torch.tensor(data[3][i]), torch.tensor(data[4][i]))
                 self.counter += 1
 
     def get_batch(self):
@@ -21,6 +25,9 @@ class replay_buffer():
         rewards = torch.stack([self.buffer[i][2] for i in idx])
         next_states = torch.stack([self.buffer[i][3] for i in idx])
         dones = torch.stack([self.buffer[i][4] for i in idx])
+        if self.log_probs:
+            log_probs = torch.stack([self.buffer[i][5] for i in idx])
+            return states, actions, rewards, next_states, dones, log_probs
         return states, actions, rewards, next_states, dones
     
 class episodic_replay_buffer():
