@@ -1,0 +1,29 @@
+---------
+parameters: 
+name: PPO_lunarlander
+train_loop: PPO_learn_batches
+exploration: Explorations.multinomial
+batch_size: 512
+learning_rate: 0.001
+weight_decay: 1e-05
+trains_every_frames: 1
+train_after_frames: 20000
+buffer_size: 200000
+update_target_every_frames: 1000
+episodes_before_train: 32
+baseline_model: True
+gamma: 0.995
+lambda_: 0.8
+sample_lengths: 30
+entropy_regulization: 0.5
+epsilon_clip: 0.1
+epsilon_start: 0.9
+epsilon_end: 0.1
+decay_period_of_epsilon: 200000
+env_name: LunarLander-v2
+render_mode: None
+continuous: False
+num_envs: 16
+save_agent_every: 40000
+measure_performance_every: 40000
+---------

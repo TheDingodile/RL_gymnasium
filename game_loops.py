@@ -96,7 +96,7 @@ def PPO_learn_batches(**args):
     buffer = replay_buffer(log_probs=True, **args)
     while True:
         for _ in range(40000 // args["num_envs"]):
-            action, log_prob = agent.take_action(state)
+            action, log_prob = agent.take_action(state, output_log_prob=True)
             new_state, reward, done, truncated, info = env.step(action)
             buffer.save_data((state, action, reward, new_state, done, log_prob), truncated)
             data_collector.collect(reward, done, truncated)
@@ -119,4 +119,6 @@ def get_agent(env, **args):
         agent = Actorcritic_actor(env, **args)
     elif args['train_loop'] == "PPO_learn":
         agent = PPO_Agent(env, **args)
+    elif args['train_loop'] == "PPO_learn_batches":
+        agent = PPO_dual_network_Agent(env, **args)
     return agent

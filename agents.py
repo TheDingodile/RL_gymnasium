@@ -227,7 +227,7 @@ class PPO_Agent(Actor_Agent):
                     self.optimizer.step()
                     self.optimizer.zero_grad()
 
-class PPO_dual_network_Agent(Agent):
+class PPO_dual_network_Agent(Actor_Agent):
     def __init__(self, env, entropy_regulization, epsilon_clip, gamma, **args):
         continuous = args.get("continuous", False)
         super().__init__(env, Networks.Policy_advantage_network if continuous else Networks.Policy_advantage_network , **args)
@@ -248,21 +248,16 @@ class PPO_dual_network_Agent(Agent):
             surr1 = ratio * advantage.detach()
             surr2 = torch.clamp(ratio, 1 - self.epsilon_clip, 1 + self.epsilon_clip) * advantage.detach()
             loss = torch.mean(-torch.min(surr1, surr2) - self.entropy_regulization * entropy_of_policies + 0.5 * advantage ** 2)
+            print(ratio[0], advantage[0], entropy_of_policies[0])
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
 
-    def take_action(self, state):
+    def take_action(self, state, output_log_prob=False):
         output = self.forward(torch.tensor(state))
         policy, _ = output[:, :-1], output[:, -1]
         action = self.exploration.explore(policy)
-        return action, self.log_policy(policy, torch.tensor(action))[0].detach()
-
-
-    def log_policy(self, policy, actions):
-        if self.continuous:
-            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+        if output_log_prob:
+            return action, self.log_policy(policy, torch.tensor(action))[0].detach()
         else:
-            log_policy = torch.log(policy)
-            entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
-            return torch.gather(log_policy, 1, actions.unsqueeze(1)).squeeze(1), entropy_of_policy
+            return action

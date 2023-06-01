@@ -1,13 +1,13 @@
 from typing import Callable
 from helpers import run
-from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_online, PPO_learn_batches
+from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_batches
 from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "PPO_lunarlander_batch" # (name of the trained agent)
+    name: str = "PPO_lunarlander_batch_continuous" # (name of the trained agent)
     train_loop: Callable = PPO_learn_batches # (choose between deep q learning, policy gradient, actor critic, eval)
-    exploration: Explorations = Explorations.multinomial # (How to choose action from output of agent)
+    exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
@@ -40,7 +40,7 @@ class parameters:
     # environment parameters
     env_name: str = "LunarLander-v2" # (choose between LunarLander-v2, CartPole-v1, etc.)
     render_mode: str = None # (human or None, only use human if very few num_envs and you want to see it play while training (is always human if eval mode))
-    continuous: bool = False # (whether the environment is continuous or not)
+    continuous: bool = True # (whether the environment is continuous or not)
     num_envs: int = 16 # (how many environments to run in parallel)
 
     # extra parameters
