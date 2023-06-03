@@ -75,7 +75,7 @@ class Actor_Agent(Agent):
 
     def log_policy(self, policy, actions):
         if self.continuous:
-            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+            return MultivariateNormal(policy, 0.1 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
         else:
             log_policy = torch.log(policy)
             entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
@@ -264,7 +264,7 @@ class PPO_dual_network_Agent(Agent):
         
     def log_policy(self, policy, actions):
         if self.continuous:
-            return MultivariateNormal(policy, 0.2 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+            return MultivariateNormal(policy, 0.1 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
         else:
             log_policy = torch.log(policy)
             entropy_of_policy = -torch.sum(policy * log_policy, dim=1)

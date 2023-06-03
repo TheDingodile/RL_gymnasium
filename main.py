@@ -5,9 +5,10 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "test" # (name of the trained agent)
-    train_loop: Callable = PPO_learn_batches # (choose between deep q learning, policy gradient, actor critic, eval)
+    name: str = "PPO_lunarlander_batch_medium_reg_continuous" # (name of the trained agent)
+    train_loop: Callable = eval # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
+    Standard_deviation: float = 0.5 # (only used with normal distribution exploration)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
@@ -29,7 +30,7 @@ class parameters:
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.8 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 0.02 # (only used with policy agents)
+    entropy_regulization: float = 0.1 # (only used with policy agents)
     epsilon_clip: float = 0.1 # (only used with PPO)
 
     # only used with epsilon greedy
