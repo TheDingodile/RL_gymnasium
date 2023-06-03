@@ -10,6 +10,7 @@ class Networks(Enum):
     Actor_Network = 2
     Normal_distribution = 3
     Policy_advantage_network = 4
+    Policy_advantage_network_continuous = 5
 
 class Multiply(nn.Module):
     def __init__(self, alpha):
@@ -34,6 +35,7 @@ class Network:
         self.action_space = get_action_space(env, continuous)
         self.state_space_size = env.observation_space.shape[1]
         last_hidden_layer_size = 32
+        mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
         self.base_network = nn.Sequential(nn.Linear(self.state_space_size, 64), 
                                         nn.LeakyReLU(), 
                                         nn.Linear(64, last_hidden_layer_size),
@@ -45,7 +47,9 @@ class Network:
         elif network == Networks.Actor_Network:
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1))
         elif network == Networks.Normal_distribution:
-            mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult))
         elif network == Networks.Policy_advantage_network:
             self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1)), nn.Linear(last_hidden_layer_size, 1)))
+        elif network == Networks.Policy_advantage_network_continuous:   
+            self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult)), nn.Linear(last_hidden_layer_size, 1)))
+
