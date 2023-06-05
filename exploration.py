@@ -54,5 +54,9 @@ class Exploration:
     def multinomial(self, values):
         return torch.multinomial(values, 1).squeeze(1).tolist()
     
-    def normal_distribution(self, values):
-        return MultivariateNormal(values, 0.1 * torch.eye(self.action_space)).sample().tolist()
+    def normal_distribution(self, values, std=0.1):
+        if isinstance(std, float):
+            return MultivariateNormal(values, std * torch.eye(self.action_space)).sample().tolist()
+        
+        noise = MultivariateNormal(torch.zeros(values.shape), torch.eye(self.action_space)).sample()
+        return values + noise * std

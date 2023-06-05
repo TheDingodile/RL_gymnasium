@@ -283,15 +283,32 @@ class Soft_actorcritic_critic(Agent):
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
-    
-
-
         
-class Soft_actorcritic_Actor(Actor_Agent):
-    def __init__(self, env, gamma, update_target_every_frames, **args):
-        super().__init__(env, **args)
+class Soft_actorcritic_Actor(Agent):
+    def __init__(self, env, gamma, update_target_every_frames, entropy_regulization, **args):
+        continuous = args.get("continuous", False)
+        super().__init__(env, Networks.Normal_distribution_variable_std, **args)
+        self.entropy_regulization = entropy_regulization
+        self.continuous = continuous
         self.gamma = gamma
         self.update_target_every_frames = update_target_every_frames
+
+    def take_action(self, state, output_log_prob=False):
+        if not isinstance(state, torch.Tensor):
+            state = torch.tensor(state)
+        output = self.forward(state)
+        mean, log_std = output[:, :self.action_space], output[:, self.action_space:]
+        std = torch.exp(log_std)
+        non_squeezed_action = self.exploration.explore(mean, std)
+        action = torch.tanh(non_squeezed_action)
+        if output_log_prob:
+            return action, self.log_policy(mean, std, non_squeezed_action)
+        else:
+            return action.tolist()
+
+    def log_policy(self, mean, std, non_squeezed_action):
+        standardized_actions = (non_squeezed_action - mean) / std
+        return MultivariateNormal(torch.zeros(mean.shape), torch.eye(self.action_space)).log_prob(standardized_actions) - torch.sum(torch.log(1 - torch.tanh(non_squeezed_action)**2), dim=1)
 
     def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
         if buffer.counter < self.train_after_frames:
@@ -302,18 +319,18 @@ class Soft_actorcritic_Actor(Actor_Agent):
         for _ in range(self.trains_every_frames):
             states, actions, rewards, next_states, dones = buffer.get_batch()
             next_actions, next_log_probs = self.take_action(next_states, output_log_prob=True)
-            input_for_critics_next = torch.cat([next_states, torch.tensor(next_actions)], dim=1)
+            input_for_critics_next = torch.cat([next_states, next_actions], dim=1).detach()
             vals_next1 = agent_critic1.target_network.forward(input_for_critics_next)
             vals_next2 = agent_critic2.target_network.forward(input_for_critics_next)
-            min_q_values_target = torch.min(vals_next1, vals_next2).detach().flatten()
-            target = (rewards.float() + self.gamma * (1 - dones.int()).detach() * (min_q_values_target - self.entropy_regulization * next_log_probs)).unsqueeze(1)  
+            min_q_values_target = torch.min(vals_next1, vals_next2).flatten()
+            target = (rewards.float() + self.gamma * (1 - dones.int()) * (min_q_values_target - self.entropy_regulization * next_log_probs)).unsqueeze(1).detach() 
 
             input_for_critics = torch.cat([states, actions], dim=1)
             agent_critic1.train(input_for_critics, target)
             agent_critic2.train(input_for_critics, target)
 
             actions_for_actor, log_probs_for_actor = self.take_action(states, output_log_prob=True)
-            input_for_critics = torch.cat([states, torch.tensor(actions_for_actor)], dim=1)
+            input_for_critics = torch.cat([states, actions_for_actor], dim=1)
             min_q_values = torch.min(agent_critic1.network.forward(input_for_critics), agent_critic2.network.forward(input_for_critics)).flatten()
             loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values)
             loss.backward()

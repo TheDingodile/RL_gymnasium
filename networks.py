@@ -12,6 +12,7 @@ class Networks(Enum):
     Policy_advantage_network = 4
     Policy_advantage_network_continuous = 5
     SAC_q_network = 6
+    Normal_distribution_variable_std = 7
 
 class Multiply(nn.Module):
     def __init__(self, alpha):
@@ -49,6 +50,8 @@ class Network:
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1))
         elif network == Networks.Normal_distribution:
             self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult))
+        elif network == Networks.Normal_distribution_variable_std:
+            self.network = nn.Sequential(self.base_network, nn.Linear(last_hidden_layer_size, 2 * self.action_space))
         elif network == Networks.Policy_advantage_network:
             self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1)), nn.Linear(last_hidden_layer_size, 1)))
         elif network == Networks.Policy_advantage_network_continuous:   
