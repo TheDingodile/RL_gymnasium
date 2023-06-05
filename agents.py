@@ -23,7 +23,9 @@ class Agent():
         self.criterion = nn.MSELoss()
 
     def take_action(self, state):
-        policy = self.forward(torch.tensor(state))
+        if not isinstance(state, torch.Tensor):
+            state = torch.tensor(state)
+        policy = self.forward(state)
         action = self.exploration.explore(policy)
         return action
     
@@ -66,7 +68,9 @@ class Actor_Agent(Agent):
         pass
 
     def take_action(self, state, output_log_prob=False):
-        policy = self.forward(torch.tensor(state))
+        if not isinstance(state, torch.Tensor):
+            state = torch.tensor(state)
+        policy = self.forward(state)
         action = self.exploration.explore(policy)
         if output_log_prob:
             return action, self.log_policy(policy, torch.tensor(action))[0].detach()
@@ -248,7 +252,6 @@ class PPO_dual_network_Agent(Agent):
             surr1 = ratio * advantage.detach()
             surr2 = torch.clamp(ratio, 1 - self.epsilon_clip, 1 + self.epsilon_clip) * advantage.detach()
             loss = torch.mean(-torch.min(surr1, surr2) - self.entropy_regulization * entropy_of_policies + 0.5 * advantage ** 2)
-            print(ratio[0], advantage[0], entropy_of_policies[0])
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -269,4 +272,52 @@ class PPO_dual_network_Agent(Agent):
             log_policy = torch.log(policy)
             entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
             return torch.gather(log_policy, 1, actions.unsqueeze(1)).squeeze(1), entropy_of_policy
+        
+class Soft_actorcritic_critic(Agent):
+    def __init__(self, env, **args):
+        super().__init__(env, Networks.SAC_q_network, **args)
+        self.target_network = deepcopy(self.network)
+
+    def train(self, input_for_critics, target):
+        loss = self.criterion(self.forward(input_for_critics), target)
+        loss.backward()
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+    
+
+
+        
+class Soft_actorcritic_Actor(Actor_Agent):
+    def __init__(self, env, gamma, update_target_every_frames, **args):
+        super().__init__(env, **args)
+        self.gamma = gamma
+        self.update_target_every_frames = update_target_every_frames
+
+    def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
+        if buffer.counter < self.train_after_frames:
+            return
+        if (buffer.counter // self.num_envs) % self.update_target_every_frames == 0:
+            agent_critic1.target_network = deepcopy(agent_critic1.network)
+            agent_critic2.target_network = deepcopy(agent_critic2.network)
+        for _ in range(self.trains_every_frames):
+            states, actions, rewards, next_states, dones = buffer.get_batch()
+            next_actions, next_log_probs = self.take_action(next_states, output_log_prob=True)
+            input_for_critics_next = torch.cat([next_states, torch.tensor(next_actions)], dim=1)
+            vals_next1 = agent_critic1.target_network.forward(input_for_critics_next)
+            vals_next2 = agent_critic2.target_network.forward(input_for_critics_next)
+            min_q_values_target = torch.min(vals_next1, vals_next2).detach().flatten()
+            target = (rewards.float() + self.gamma * (1 - dones.int()).detach() * (min_q_values_target - self.entropy_regulization * next_log_probs)).unsqueeze(1)  
+
+            input_for_critics = torch.cat([states, actions], dim=1)
+            agent_critic1.train(input_for_critics, target)
+            agent_critic2.train(input_for_critics, target)
+
+            actions_for_actor, log_probs_for_actor = self.take_action(states, output_log_prob=True)
+            input_for_critics = torch.cat([states, torch.tensor(actions_for_actor)], dim=1)
+            min_q_values = torch.min(agent_critic1.network.forward(input_for_critics), agent_critic2.network.forward(input_for_critics)).flatten()
+            loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values)
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+
 

@@ -1,5 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_dual_network_Agent
+from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_dual_network_Agent, Soft_actorcritic_Actor, Soft_actorcritic_critic
 from copy import deepcopy
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from collector import collector
@@ -29,7 +29,6 @@ def deep_q_learn(**args):
         buffer.save_data((state, action, reward, new_state, done), truncated)
         data_collector.collect(reward, done, truncated)
         state = new_state
-        buffer.get_batch()
         agent.train(buffer)
         save_experiment(agent, data_collector, **args)
 
@@ -41,7 +40,6 @@ def reinforce_learn(**args):
     baseline_model = None
     if args['baseline_model']:
         baseline_model = BaselineAgent(env, **args)
-
     buffer = episodic_replay_buffer(**args)
     data_collector = collector(**args)
 
@@ -108,6 +106,25 @@ def PPO_learn_batches(**args):
             agent.train(states, actions, next_states, rewards, dones, log_probs)
         buffer.buffer = [None for _ in range(buffer.buffer_size)]
         buffer.counter = 0
+
+def soft_actor_critic_learn(**args):
+    env = get_env(**args)
+    state, _ = env.reset()
+    agent_actor = Soft_actorcritic_Actor(env, **args)
+    agent_critic1 = Soft_actorcritic_critic(env, **args)
+    agent_critic2 = Soft_actorcritic_critic(env, **args)
+    data_collector = collector(**args)
+    buffer = replay_buffer(**args)
+
+    while True:
+        action = agent_actor.take_action(state)
+        new_state, reward, done, truncated, _ = env.step(action)
+        buffer.save_data((state, action, reward, new_state, done), truncated)
+        data_collector.collect(reward, done, truncated)
+        state = new_state
+        agent_actor.train(buffer, agent_critic1, agent_critic2)
+        save_experiment(agent_actor, data_collector, **args)
+
 
 
 def get_agent(env, **args):

@@ -1,14 +1,13 @@
 from typing import Callable
 from helpers import run
-from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_batches
+from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_batches, soft_actor_critic_learn
 from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "PPO_lunarlander_batch_medium_reg_continuous" # (name of the trained agent)
-    train_loop: Callable = eval # (choose between deep q learning, policy gradient, actor critic, eval)
+    name: str = "soft_actor_critic_learn" # (name of the trained agent)
+    train_loop: Callable = soft_actor_critic_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
-    Standard_deviation: float = 0.5 # (only used with normal distribution exploration)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
@@ -20,7 +19,7 @@ class parameters:
     # only used with a replay buffer
     train_after_frames: int = 20000
     buffer_size: int = 200000
-    update_target_every_frames: int = 1000
+    update_target_every_frames: int = 200
 
     # only used with learning from episodes (eg. REINFORCE or actor critic)
     episodes_before_train: int = 32 # (How many episodes is played before we train on them. Higher number is faster but less efficient)

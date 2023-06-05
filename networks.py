@@ -11,6 +11,7 @@ class Networks(Enum):
     Normal_distribution = 3
     Policy_advantage_network = 4
     Policy_advantage_network_continuous = 5
+    SAC_q_network = 6
 
 class Multiply(nn.Module):
     def __init__(self, alpha):
@@ -27,8 +28,8 @@ class ParallelModule(nn.Sequential):
     def forward(self, input):
         output = []
         for module in self:
-            output.append( module(input) )
-        return torch.cat( output, dim=1 )
+            output.append(module(input))
+        return torch.cat(output, dim=1)
 
 class Network:
     def __init__(self, network: Networks, env, continuous, **args):
@@ -52,4 +53,6 @@ class Network:
             self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Softmax(dim=1)), nn.Linear(last_hidden_layer_size, 1)))
         elif network == Networks.Policy_advantage_network_continuous:   
             self.network = nn.Sequential(self.base_network, ParallelModule(nn.Sequential(nn.Linear(last_hidden_layer_size, self.action_space), nn.Tanh(), Multiply(mult)), nn.Linear(last_hidden_layer_size, 1)))
+        elif network == Networks.SAC_q_network:
+            self.network = nn.Sequential(nn.Linear(self.state_space_size + self.action_space, 64), nn.LeakyReLU(), nn.Linear(64, last_hidden_layer_size), nn.LeakyReLU(), nn.Linear(last_hidden_layer_size, 1))
 
