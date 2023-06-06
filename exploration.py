@@ -1,6 +1,7 @@
 import torch
 from enum import Enum
 from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions import Normal
 
 class Explorations(Enum):
     greedy = 0
@@ -57,6 +58,4 @@ class Exploration:
     def normal_distribution(self, values, std=0.1):
         if isinstance(std, float):
             return MultivariateNormal(values, std * torch.eye(self.action_space)).sample().tolist()
-        
-        noise = MultivariateNormal(torch.zeros(values.shape), torch.eye(self.action_space)).sample()
-        return values + noise * std
+        return Normal(values, std).rsample()

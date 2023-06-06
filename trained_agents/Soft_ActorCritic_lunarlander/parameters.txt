@@ -1,21 +1,21 @@
 ---------
 parameters: 
-name: soft_actor_critic_learn
+name: Soft_ActorCritic_lunarlander
 train_loop: soft_actor_critic_learn
 exploration: Explorations.normal_distribution
-batch_size: 512
+batch_size: 256
 learning_rate: 0.0001
 weight_decay: 1e-05
 trains_every_frames: 1
 train_after_frames: 40000
-buffer_size: 200000
-update_target_every_frames: 2000
+buffer_size: 500000
+update_target_every_frames: 500
 episodes_before_train: 32
 baseline_model: True
 gamma: 0.995
 lambda_: 0.8
 sample_lengths: 30
-entropy_regulization: 1
+entropy_regulization: 3
 epsilon_clip: 0.1
 epsilon_start: 0.9
 epsilon_end: 0.1

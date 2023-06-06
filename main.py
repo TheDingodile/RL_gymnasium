@@ -5,21 +5,21 @@ from exploration import Explorations, Exploration
 
 class parameters:
     # general parameters
-    name: str = "soft_actor_critic_learn" # (name of the trained agent)
+    name: str = "Soft_ActorCritic_lunarlander" # (name of the trained agent)
     train_loop: Callable = soft_actor_critic_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
-    batch_size: int = 512 # (if multiple agents are used this batch size is used for all of them)
+    batch_size: int = 256 # (if multiple agents are used this batch size is used for all of them)
     learning_rate: float = 1e-4 # (if multiple agents are used this learning rate is used for all of them)
     weight_decay: float = 1e-5
     trains_every_frames: int = 1
 
     # only used with a replay buffer
     train_after_frames: int = 40000
-    buffer_size: int = 200000
-    update_target_every_frames: int = 5000
+    buffer_size: int = 500000
+    update_target_every_frames: int = 500
 
     # only used with learning from episodes (eg. REINFORCE or actor critic)
     episodes_before_train: int = 32 # (How many episodes is played before we train on them. Higher number is faster but less efficient)
@@ -29,7 +29,7 @@ class parameters:
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.8 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 100 # (only used with policy agents)
+    entropy_regulization: float = 3 # (only used with policy agents)
     epsilon_clip: float = 0.1 # (only used with PPO)
 
     # only used with epsilon greedy

@@ -7,6 +7,7 @@ from exploration import Exploration, Explorations
 from networks import Network, Networks
 from helpers import get_action_space
 from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions import Normal
 
 class Agent():
     def __init__(self, env, network, num_envs, exploration, learning_rate, weight_decay, train_after_frames, trains_every_frames, batch_size, **args):
@@ -77,9 +78,9 @@ class Actor_Agent(Agent):
         else:
             return action
 
-    def log_policy(self, policy, actions):
+    def log_policy(self, policy, actions, std=0.1):
         if self.continuous:
-            return MultivariateNormal(policy, 0.1 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+            return MultivariateNormal(policy, std * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
         else:
             log_policy = torch.log(policy)
             entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
@@ -265,9 +266,9 @@ class PPO_dual_network_Agent(Agent):
         else:
             return action
         
-    def log_policy(self, policy, actions):
+    def log_policy(self, policy, actions, std=0.1):
         if self.continuous:
-            return MultivariateNormal(policy, 0.1 * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
+            return MultivariateNormal(policy, std * torch.eye(self.action_space)).log_prob(actions), - ((actions[:, 0] - 0.5) ** 2 + (torch.abs(actions[:, 1]) - 0.5) ** 2)
         else:
             log_policy = torch.log(policy)
             entropy_of_policy = -torch.sum(policy * log_policy, dim=1)
@@ -297,8 +298,8 @@ class Soft_actorcritic_Actor(Agent):
         if not isinstance(state, torch.Tensor):
             state = torch.tensor(state)
         output = self.forward(state)
-        mean, log_std = output[:, :self.action_space], output[:, self.action_space:]
-        std = torch.exp(log_std)
+        mean, std = output[:, :self.action_space], torch.sigmoid(output[:, self.action_space:]) + 0.1
+
         non_squeezed_action = self.exploration.explore(mean, std)
         action = torch.tanh(non_squeezed_action)
         if output_log_prob:
@@ -307,8 +308,10 @@ class Soft_actorcritic_Actor(Agent):
             return action.tolist()
 
     def log_policy(self, mean, std, non_squeezed_action):
-        standardized_actions = (non_squeezed_action - mean) / std
-        return MultivariateNormal(torch.zeros(mean.shape), torch.eye(self.action_space)).log_prob(standardized_actions) - torch.sum(torch.log(1 - torch.tanh(non_squeezed_action)**2), dim=1)
+        log_prob = Normal(mean, std).log_prob(non_squeezed_action)
+        log_prob -= torch.log(1 - torch.tanh(non_squeezed_action)**2)
+        log_prob = torch.sum(log_prob, dim=1)
+        return log_prob
 
     def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
         if buffer.counter < self.train_after_frames:
