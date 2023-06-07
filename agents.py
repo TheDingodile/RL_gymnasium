@@ -298,14 +298,15 @@ class Soft_actorcritic_Actor(Agent):
         if not isinstance(state, torch.Tensor):
             state = torch.tensor(state)
         output = self.forward(state)
-        mean, std = output[:, :self.action_space], torch.sigmoid(output[:, self.action_space:])
+        mean, std = output[:, :self.action_space], torch.exp(output[:, self.action_space:])
         # print(torch.max(mean), torch.min(mean), torch.max(std), torch.min(std))
         non_squeezed_action = self.exploration.explore(mean, std)
 
         action = torch.tanh(non_squeezed_action)
 
         if output_log_prob:
-            return action, self.log_policy(mean, std, non_squeezed_action)
+            log_prob, regulization = self.log_policy(mean, std, non_squeezed_action)
+            return action, log_prob, regulization
         else:
             return action.tolist()
 
@@ -313,7 +314,7 @@ class Soft_actorcritic_Actor(Agent):
         log_prob = Normal(mean, std).log_prob(non_squeezed_action)
         log_prob -= torch.log(1 - torch.tanh(non_squeezed_action)**2 + 1e-6)
         log_prob = torch.sum(log_prob, dim=1)
-        return log_prob
+        return log_prob, (mean[:, 0] - 0.5) ** 2 + (torch.abs(mean[:, 1]) - 0.5) ** 2 + torch.sum(std ** 2, dim=1)
 
     def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
         tau = 0.005
@@ -327,10 +328,10 @@ class Soft_actorcritic_Actor(Agent):
         # if (buffer.counter // self.num_envs) % self.update_target_every_frames == 0:
         #     agent_critic1.target_network = deepcopy(agent_critic1.network)
         #     agent_critic2.target_network = deepcopy(agent_critic2.network)
-        
+
         for _ in range(self.trains_every_frames):
             states, actions, rewards, next_states, dones = buffer.get_batch()
-            next_actions, next_log_probs = self.take_action(next_states, output_log_prob=True)
+            next_actions, next_log_probs, _ = self.take_action(next_states, output_log_prob=True)
             input_for_critics_next = torch.cat([next_states, next_actions], dim=1).detach()
             vals_next1 = agent_critic1.target_network.forward(input_for_critics_next)
             vals_next2 = agent_critic2.target_network.forward(input_for_critics_next)
@@ -341,10 +342,10 @@ class Soft_actorcritic_Actor(Agent):
             agent_critic1.train(input_for_critics, target)
             agent_critic2.train(input_for_critics, target)
 
-            actions_for_actor, log_probs_for_actor = self.take_action(states, output_log_prob=True)
+            actions_for_actor, log_probs_for_actor, regulization = self.take_action(states, output_log_prob=True)
             input_for_critics = torch.cat([states, actions_for_actor], dim=1)
             min_q_values = torch.min(agent_critic1.network.forward(input_for_critics), agent_critic2.network.forward(input_for_critics)).flatten()
-            loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values)
+            loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values + regulization)
             loss.backward()
             # print norm of gradient
             # print(loss.item(), torch.max(log_probs_for_actor))
