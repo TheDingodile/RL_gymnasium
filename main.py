@@ -11,8 +11,8 @@ class parameters:
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
-    batch_size: int = 256 # (if multiple agents are used this batch size is used for all of them)
-    learning_rate: float = 1e-4 # (if multiple agents are used this learning rate is used for all of them)
+    batch_size: int = 512 # (if multiple agents are used this batch size is used for all of them)
+    learning_rate: float = 5e-4 # (if multiple agents are used this learning rate is used for all of them)
     weight_decay: float = 1e-5
     trains_every_frames: int = 1
 
@@ -29,7 +29,7 @@ class parameters:
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.8 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 3 # (only used with policy agents)
+    entropy_regulization: float = 0.1 # (only used with policy agents)
     epsilon_clip: float = 0.1 # (only used with PPO)
 
     # only used with epsilon greedy

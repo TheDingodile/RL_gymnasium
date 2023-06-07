@@ -298,10 +298,12 @@ class Soft_actorcritic_Actor(Agent):
         if not isinstance(state, torch.Tensor):
             state = torch.tensor(state)
         output = self.forward(state)
-        mean, std = output[:, :self.action_space], torch.sigmoid(output[:, self.action_space:]) + 0.1
-
+        mean, std = torch.tanh(output[:, :self.action_space]) * 2, torch.sigmoid(output[:, self.action_space:])
+        # print(torch.max(mean), torch.min(mean), torch.max(std), torch.min(std))
         non_squeezed_action = self.exploration.explore(mean, std)
+
         action = torch.tanh(non_squeezed_action)
+
         if output_log_prob:
             return action, self.log_policy(mean, std, non_squeezed_action)
         else:
@@ -337,6 +339,9 @@ class Soft_actorcritic_Actor(Agent):
             min_q_values = torch.min(agent_critic1.network.forward(input_for_critics), agent_critic2.network.forward(input_for_critics)).flatten()
             loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values)
             loss.backward()
+            # print norm of gradient
+            # print(loss.item(), torch.max(log_probs_for_actor))
+            # print true if any nans in total_norm, log_probs_for_actor, min_q_values, loss
             self.optimizer.step()
             self.optimizer.zero_grad()
 
