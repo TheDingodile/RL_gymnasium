@@ -316,11 +316,18 @@ class Soft_actorcritic_Actor(Agent):
         return log_prob
 
     def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
+        tau = 0.005
         if buffer.counter < self.train_after_frames:
             return
-        if (buffer.counter // self.num_envs) % self.update_target_every_frames == 0:
-            agent_critic1.target_network = deepcopy(agent_critic1.network)
-            agent_critic2.target_network = deepcopy(agent_critic2.network)
+        for target_param, param in zip(agent_critic1.target_network.parameters(), agent_critic1.network.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+        for target_param, param in zip(agent_critic2.target_network.parameters(), agent_critic2.network.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+        # if (buffer.counter // self.num_envs) % self.update_target_every_frames == 0:
+        #     agent_critic1.target_network = deepcopy(agent_critic1.network)
+        #     agent_critic2.target_network = deepcopy(agent_critic2.network)
+        
         for _ in range(self.trains_every_frames):
             states, actions, rewards, next_states, dones = buffer.get_batch()
             next_actions, next_log_probs = self.take_action(next_states, output_log_prob=True)
