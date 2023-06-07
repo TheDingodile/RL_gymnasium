@@ -298,7 +298,7 @@ class Soft_actorcritic_Actor(Agent):
         if not isinstance(state, torch.Tensor):
             state = torch.tensor(state)
         output = self.forward(state)
-        mean, std = torch.tanh(output[:, :self.action_space]) * 2, torch.sigmoid(output[:, self.action_space:])
+        mean, std = output[:, :self.action_space], torch.sigmoid(output[:, self.action_space:])
         # print(torch.max(mean), torch.min(mean), torch.max(std), torch.min(std))
         non_squeezed_action = self.exploration.explore(mean, std)
 
@@ -311,7 +311,7 @@ class Soft_actorcritic_Actor(Agent):
 
     def log_policy(self, mean, std, non_squeezed_action):
         log_prob = Normal(mean, std).log_prob(non_squeezed_action)
-        log_prob -= torch.log(1 - torch.tanh(non_squeezed_action)**2)
+        log_prob -= torch.log(1 - torch.tanh(non_squeezed_action)**2 + 1e-6)
         log_prob = torch.sum(log_prob, dim=1)
         return log_prob
 
