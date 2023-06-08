@@ -158,6 +158,8 @@ When running main.py, if the train_loop is set to eval, it will automatically se
 
 Here are some of the interesting results from the experiments, running on LunarLander-v2. Don´t mind some of the title names, it's simply because I forgot to change it before running the experiment.
 
+All of the methods learns a optimal policy for cartpole in pratically no time, so it is not included here.
+
 ### Q-learning
 
 Discrete action space:
