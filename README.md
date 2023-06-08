@@ -154,4 +154,12 @@ This file just contains the collector class which calculates the stats of the ag
 
 When running main.py, if the train_loop is set to eval, it will automatically set the settings for the experiment that you want to see correctly.
 
+## Results
+
+Here are some results from the experiments, running on LunarLander-v2.
+
+## Q-learning
+
+![Q-learning](trained_agents/deep_q_learn_lunarlander/reward_per_episode.png)
+
 
