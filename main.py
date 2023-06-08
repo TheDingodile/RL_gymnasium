@@ -5,14 +5,14 @@ from exploration import Explorations
 
 class parameters:
     # general parameters
-    name: str = "Soft_ActorCritic_lunarlander" # (name of the trained agent)
+    name: str = "Soft_ActorCritic_lunarlander_large_buffer" # (name of the trained agent)
     train_loop: Callable = soft_actor_critic_learn # (choose between deep q learning, policy gradient, actor critic, eval)
     exploration: Explorations = Explorations.normal_distribution # (How to choose action from output of agent)
     # (choose between epsilon greedy, greedy, multinomial (eg. If discrete REINFORCE), normal distribution (cont. REINFORCE), etc.)
 
     # training parameters
     batch_size: int = 256 # (if multiple agents are used this batch size is used for all of them)
-    learning_rate: float = 3e-4 # (if multiple agents are used this learning rate is used for all of them)
+    learning_rate: float = 1e-4 # (if multiple agents are used this learning rate is used for all of them)
     weight_decay: float = 1e-5
     trains_every_frames: int = 1
 
