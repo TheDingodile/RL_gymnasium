@@ -116,6 +116,7 @@ Here all the gameloops are. Most of them look similar (have a take_action, step,
 This file has all the different agents and their training methods. There is a superclass, Agent, that holds much of the attributes all the agents has in common. Then there is a subclass of this class called Actor_agent, which carries the common charateristics of the policy gradient methods. I tried to fit all the other agents under these two umbrella classes as much as possible. An agent has a network and an exploration tool which enables it to sample actions. Not all agents use their exploration tool (eg. the Baseline agent is used only to evaluate). 
 
 short description of the agents:
+
 I implemented two versions of PPO. Which differs in their networks and in when they train. Each of the versions has it's own game-loop. As the first version trains after a certain amount of episodes, and the second version trains after a certain amount of frames.
 
 1. **QAgent**:
