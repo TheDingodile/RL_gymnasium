@@ -132,7 +132,7 @@ This is simply an agent with a network that goes from state to value.
 6. **PPO_Agent**:
 This agent is trained with the PPO algorithm after each episode. It uses a seperate network for the actor part and the Q-value estimation. My experience with this PPO_Agent is not great, it's performance can be seen in "PPO_cartpole" and "PPO_lunarlander".
 7. **PPO_dual_network_Agent**:
-This agent is trained with the PPO algorithm after a certain amount of frames, and then trained a certain amount of frames. It uses a dual network for the actor part and the Q-value estimation. My experience with this PPO_Agent is much better, it's performance is seen in the "PPO_lunarlander_batch" folders. the gameloop for this algorithm is hardcoded to run 40000 frames before training 400 times with batch size. (just arbitrary numbers I found to work well)
+This agent is trained with the PPO algorithm after a certain amount of frames, and then trained a certain amount of frames. It uses a dual network for the actor part and the Q-value estimation. My experience with this PPO_Agent is much better, it's performance is seen in the "PPO_lunarlander_batch" folders. the gameloop for this algorithm is called "PPO_learn_batches" and is hardcoded to run 40000 frames before training 400 times with batch size. (just arbitrary numbers I found to work well)
 8. **Soft_actorcritic_critic**:
 This is the Q-value estimation of the SAC algorithm. It takes as input the action and state, and outputs the Q-value. This makes it able to work on continious action spaces, where a normal Q-value estimation (output Q-values for each action) would not work.
 9. **Soft_actorcritic_actor**:
@@ -190,7 +190,7 @@ Discrete action space:
 
 Continuous action space:
 
-![PPO](trained_agents/PPO_lunderlander_batch_high_reg_continuous/reward_per_episode.png)
+![PPO](trained_agents/PPO_lunarlander_batch_medium_reg_continuous/reward_per_episode.png)
 
 ### SAC
 
