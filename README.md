@@ -18,7 +18,7 @@ To use the project, you run the main.py file. Here you can choose between the di
 Here is a list of all the hyper-parameters and what they do:
 
 - **name**: 
-It is the name you give the experiment. The experiment will be saved in the trained_agents folder. If you choose a name which already exists it will be overwritten. A folder will be created with the model you are training, some performance graphs and a txt file of the used hyper-parameters. However, if you use eval mode (see below) the model and performance graphs will be loaded from the trained_agents folder instead.
+It is the name you give the experiment. The experiment will be saved in the trained_agents folder. If you choose a name which already exists it will be overwritten. A folder will be created with the model you are training, some performance graphs and a txt file of the used hyper-parameters. However, if you use eval mode the model and performance graphs will be loaded from the trained_agents folder instead.
 
 - **train_loop**:
 This parameter decides what kind of RL algorithm you want to use. It can also be set to eval which loads the folder with the name given and you can see it play.
@@ -93,10 +93,10 @@ This parameter decides how often you want to save the model (and save performanc
 This parameter decides how often you want to measure the performance of the model. So you can get a smoother plot and not save too much data.
 
 
-In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continuous on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations.
+In general, not all combinations of hyper-parameters is able to run. For example, not all environments has a continious version, so choosing continuous on a non-continious version might crash the program. Likewise, choosing you want to sample actions from a normal-distribution given you have a discrete action space will also crash the program. However, the program should be able to handle most of the combinations. Additionally, some hyper-parameter configurations could also cause the program to crash. Eg. A too high learning rate could make some models diverge. This is especially a potential issue in the monte carlo methods, as the variance is quite high here.
 
 ## Details
-The PPO implementation follows the original paper https://arxiv.org/pdf/1707.06347.pdf with regulization entropy. There are two versions implemented. The first uses seperate networks for the actor and advantage estimates, the second version uses a dual net.
+The PPO implementation follows the original paper https://arxiv.org/pdf/1707.06347.pdf with regulization entropy. There are two versions implemented. The first uses seperate networks for the actor and advantage estimates, the second version uses a dual net. I got the best performance with the dual net.
 
 The soft actor critic implementation follows this https://spinningup.openai.com/en/latest/algorithms/sac.html. Which uses two Q-functions rather than a V-function as in the original paper which is found here https://spinningup.openai.com/en/latest/algorithms/sac.html.
 
@@ -121,18 +121,36 @@ This agent is used in Q learning and outputs Q values for each actions. It is tr
 2. **REINFORCE_Agent**:
 Trained via the standard REINFORCE algorithm using monte carlo returns. It can use a baseline network for advantage estimation to reduce variance.
 3. **Actorcritic_critic**:
-This is the critic for the actorcritic algorithm. It is similar to the QAgent, but it can use eligibility traces. 
+This is the critic for the actorcritic algorithm. It is similar to the QAgent, but it can use eligibility traces.
+4. **Actorcritic_actor**:
+Thsi is the actor for the actorcritic algorithm. It also uses eligibility traces, the critic and the actor are trained together in this agents train loop.
+5. **BaselineAgent**:
+This is simply an agent with a network that goes from state to value.
+
+I implemented two versions of PPO. Which differs in their networks and in when they train. Each of the versions has it's own game-loop. As the first version trains after each episode, and the second version trains after a certain amount of frames.
+6. **PPO_Agent**:
+This agent is trained with the PPO algorithm after each episode. It uses a seperate network for the actor part and the Q-value estimation. My experience with this PPO_Agent is not great, it's performance can be seen in "PPO_cartpole" and "PPO_lunarlander".
+7. **PPO_dual_network_Agent**:
+This agent is trained with the PPO algorithm after a certain amount of frames, and then trained a certain amount of frames. It uses a dual network for the actor part and the Q-value estimation. My experience with this PPO_Agent is much better, it's performance is seen in the "PPO_lunarlander_batch" folders. the gameloop for this algorithm is hardcoded to run 40000 frames before training 400 times with batch size. (just arbitrary numbers I found to work well)
+8. **Soft_actorcritic_critic**:
+This is the Q-value estimation of the SAC algorithm. It takes as input the action and state, and outputs the Q-value. This makes it able to work on continious action spaces, where a normal Q-value estimation (output Q-values for each action) would not work.
+9. **Soft_actorcritic_actor**:
+This is the actor of the SAC algorithm. It takes as input the state, and outputs the action. It follows the OpenAI implementation by ouputting a mean and standard deviation from each action, using the reparametization trick to draw the action from the normal distribution, and finally applies the tanh in order to ensure the drawn action is within the action space. For the other continious algorithms, the action is simply drawn from a normal distribution with a diagonal covariance matrix with a standard deviation of 0.1, and only the mean is modelled.
 
 
 - **exploration.py**:
-This file holds a class which holds all the exploration methods. This makes it easy to choose what exploration method you want to use. There are the epsilon greedy variants for the Q-learning, and  for policy gradient methods the multinomial for discrete and normal distribution with and without standard deviation for continuous.
+This file holds a class which holds all the exploration methods. This makes it easy to choose what exploration method you want to use. There are the epsilon greedy variants for the Q-learning, and for policy gradient methods the multinomial for discrete and normal distribution with and without standard deviation for continuous.
+
+- **networks.py**:
+This file holds all the networks. They are all very similar, and differs mostly in input and output size, or whether they apply a tanh or softmax in the end. They are all feed forward networks with 2 hidden layers. When running experiments you don't need to worry about this file, as the agents will automatically create the correct network for you.
+
+- **replay_buffer.py**:
+This holds the replay buffers. There are two types. A normal one used in Q-learning and to train the Q estimators in SAC. When sampling from this buffer random samplers are just drawns. The other type is called an episodic buffer. This one holds all the most recent episodes, and keeps track of which of them are done, so it can say that it is ready to train when a sufficient amount of episodes are done. This is used in the policy gradient methods.
+
+- **collector.py**:
+This file just contains the collector class which calculates the stats of the agent. It is used to display the performance plots.
 
 
-Right now for continious environments a normal distribution is used. It has a hardcoded diagonal covariance matrix with a standard deviation of 0.1. 
-
-PPO_batch is hardcoded to run 40000 frames before training 400 times with batch size.
-
-Some hyper-parameter configurations could also cause the program to crash. Eg. A too high learning rate could make some models diverge. This is especially a potential issue in the monte carlo methods, as the variance is quite high here.
-
+When running main.py, if the train_loop is set to eval, it will automatically set the settings for the experiment that you want to see correctly.
 
 
