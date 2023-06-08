@@ -162,7 +162,7 @@ Here are some of the interesting results from the experiments, running on LunarL
 
 ![Q-learning](trained_agents/deep_q_learn_lunarlander/reward_per_episode.png)
 
-## REINFORCE
+### REINFORCE
 
 Discrete action space:
 
@@ -172,13 +172,13 @@ Continuous action space:
 
 ![REINFORCE](trained_agents/REINFORCE_with_baseline_lunarlander_continuous/reward_per_episode.png)
 
-## Actorcritic
+### Actorcritic
 
 Continuous action space:
 
 ![Actorcritic](trained_agents/ActorCritic_lunarlander_continious/reward_per_episode.png)
 
-## PPO
+### PPO
 
 Discrete action space:
 
@@ -188,7 +188,7 @@ Continuous action space:
 
 ![PPO](trained_agents/PPO_lunderlander_batch_high_reg_continuous/reward_per_episode.png)
 
-## SAC
+### SAC
 
 ![SAC](trained_agents/Soft_ActorCritic_lunarlander/reward_per_episode.png)
 
