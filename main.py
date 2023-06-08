@@ -1,7 +1,7 @@
 from typing import Callable
 from helpers import run
 from game_loops import deep_q_learn, eval, reinforce_learn, actor_critic_learn, PPO_learn, PPO_learn_batches, soft_actor_critic_learn
-from exploration import Explorations, Exploration
+from exploration import Explorations
 
 class parameters:
     # general parameters
@@ -18,7 +18,7 @@ class parameters:
 
     # only used with a replay buffer
     train_after_frames: int = 40000
-    buffer_size: int = 200000
+    buffer_size: int = 1000000
     update_target_every_frames: int = 1000
 
     # only used with learning from episodes (eg. REINFORCE or actor critic)
@@ -29,7 +29,7 @@ class parameters:
     gamma: float = 0.995 # (only used with td learning)
     lambda_: float = 0.8 # (only used with eligibility traces)
     sample_lengths: int = 30 # (only used with eligibility traces and only has effect when lambda_ > 0)
-    entropy_regulization: float = 0.1 # (only used with policy agents)
+    entropy_regulization: float = 2 # (only used with policy agents)
     epsilon_clip: float = 0.1 # (only used with PPO)
 
     # only used with epsilon greedy

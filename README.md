@@ -1,4 +1,4 @@
-This project allows you to use all the most well known Reinforcement Learning algorithms on the gymnasium environment.
+This project allows you to use some of the well known Reinforcement Learning algorithms on the gymnasium environment.
 
 ## Installation
 

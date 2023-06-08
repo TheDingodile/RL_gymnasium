@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 class replay_buffer():
     def __init__(self, buffer_size, batch_size, log_probs=False, **args):

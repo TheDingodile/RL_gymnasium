@@ -1,6 +1,3 @@
-import matplotlib.pyplot as plt
-
-
 class collector():
     def __init__(self, measure_performance_every, num_envs, **args) -> None:
         self.measure_performance_every = measure_performance_every

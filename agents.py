@@ -3,7 +3,7 @@ import torch.optim as optim
 import torch
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from copy import deepcopy
-from exploration import Exploration, Explorations
+from exploration import Exploration
 from networks import Network, Networks
 from helpers import get_action_space
 from torch.distributions.multivariate_normal import MultivariateNormal
@@ -299,7 +299,6 @@ class Soft_actorcritic_Actor(Agent):
             state = torch.tensor(state)
         output = self.forward(state)
         mean, std = output[:, :self.action_space], torch.exp(output[:, self.action_space:])
-        # print(torch.max(mean), torch.min(mean), torch.max(std), torch.min(std))
         non_squeezed_action = self.exploration.explore(mean, std)
 
         action = torch.tanh(non_squeezed_action)
@@ -317,6 +316,7 @@ class Soft_actorcritic_Actor(Agent):
         return log_prob, (mean[:, 0] - 0.5) ** 2 + (torch.abs(mean[:, 1]) - 0.5) ** 2 + torch.sum(std ** 2, dim=1)
 
     def train(self, buffer: replay_buffer, agent_critic1: Soft_actorcritic_critic, agent_critic2: Soft_actorcritic_critic):
+        alpha = max(self.entropy_regulization / (1 + buffer.counter / buffer.buffer_size), 0.25)
         tau = 0.005
         if buffer.counter < self.train_after_frames:
             return
@@ -325,10 +325,6 @@ class Soft_actorcritic_Actor(Agent):
         for target_param, param in zip(agent_critic2.target_network.parameters(), agent_critic2.network.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
-        # if (buffer.counter // self.num_envs) % self.update_target_every_frames == 0:
-        #     agent_critic1.target_network = deepcopy(agent_critic1.network)
-        #     agent_critic2.target_network = deepcopy(agent_critic2.network)
-
         for _ in range(self.trains_every_frames):
             states, actions, rewards, next_states, dones = buffer.get_batch()
             next_actions, next_log_probs, _ = self.take_action(next_states, output_log_prob=True)
@@ -336,7 +332,7 @@ class Soft_actorcritic_Actor(Agent):
             vals_next1 = agent_critic1.target_network.forward(input_for_critics_next)
             vals_next2 = agent_critic2.target_network.forward(input_for_critics_next)
             min_q_values_target = torch.min(vals_next1, vals_next2).flatten()
-            target = (rewards.float() + self.gamma * (1 - dones.int()) * (min_q_values_target - self.entropy_regulization * next_log_probs)).unsqueeze(1).detach() 
+            target = (rewards.float() + self.gamma * (1 - dones.int()) * (min_q_values_target - alpha * next_log_probs)).unsqueeze(1).detach() 
 
             input_for_critics = torch.cat([states, actions], dim=1)
             agent_critic1.train(input_for_critics, target)
@@ -345,11 +341,8 @@ class Soft_actorcritic_Actor(Agent):
             actions_for_actor, log_probs_for_actor, regulization = self.take_action(states, output_log_prob=True)
             input_for_critics = torch.cat([states, actions_for_actor], dim=1)
             min_q_values = torch.min(agent_critic1.network.forward(input_for_critics), agent_critic2.network.forward(input_for_critics)).flatten()
-            loss = torch.mean(self.entropy_regulization * log_probs_for_actor - min_q_values + regulization)
+            loss = torch.mean(alpha * log_probs_for_actor - min_q_values + regulization)
             loss.backward()
-            # print norm of gradient
-            # print(loss.item(), torch.max(log_probs_for_actor))
-            # print true if any nans in total_norm, log_probs_for_actor, min_q_values, loss
             self.optimizer.step()
             self.optimizer.zero_grad()
 

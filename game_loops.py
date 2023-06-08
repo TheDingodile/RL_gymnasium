@@ -1,6 +1,5 @@
 from helpers import get_env, save_experiment, eval_mode
-from agents import Agent, QAgent, Actor_Agent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_dual_network_Agent, Soft_actorcritic_Actor, Soft_actorcritic_critic
-from copy import deepcopy
+from agents import QAgent, BaselineAgent, REINFORCE_Agent, Actorcritic_actor, Actorcritic_critic, PPO_Agent, PPO_dual_network_Agent, Soft_actorcritic_Actor, Soft_actorcritic_critic
 from replay_buffer import replay_buffer, episodic_replay_buffer
 from collector import collector
 import torch

@@ -1,12 +1,10 @@
 import gymnasium as gym
-from gymnasium.utils.play import play
 import torch
 import matplotlib.pyplot as plt
 import os
 import numpy as np
 import seaborn as sns
-import json
-from exploration import Explorations, Exploration
+from exploration import Explorations
 sns.set_theme()
 
 def run(parameters):
