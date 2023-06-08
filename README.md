@@ -83,6 +83,9 @@ This parameter decides what environment you want to use. It is the name of the g
 - **render_mode**:
 This parameter decides if you want to render the environment or not. It can be set to "human" or "None". Using "None" will not render the environment, but it will speed up the training significantly.
 
+- **continuous**:
+Whether the environment is continuous. Only set true if the environment can be continuous, and you have a method that can handle continuous environments.
+
 - **num_envs**:
 This parameter decides how many environments you want to run in parallel.
 
