@@ -34,10 +34,11 @@ class ParallelModule(nn.Sequential):
 
 class Network:
     def __init__(self, network: Networks, env, continuous, **args):
+        if continuous:
+            mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
         self.action_space = get_action_space(env, continuous)
         self.state_space_size = env.observation_space.shape[1]
         last_hidden_layer_size = 32
-        mult = (np.max(env.action_space.high) - np.min(env.action_space.low[0]))/2
         self.base_network = nn.Sequential(nn.Linear(self.state_space_size, 64), 
                                         nn.LeakyReLU(), 
                                         nn.Linear(64, last_hidden_layer_size),
