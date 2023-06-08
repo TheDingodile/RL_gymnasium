@@ -180,7 +180,7 @@ Discrete action space:
 
 Continuous action space:
 
-![Actorcritic](trained_agents/ActorCritic_lunarlander_continuous/reward_per_episode.png)
+![Actorcritic](trained_agents/ActorCritic_lunarlander_continious/reward_per_episode.png)
 
 ## PPO
 
