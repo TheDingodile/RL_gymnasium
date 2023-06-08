@@ -63,7 +63,7 @@ def eval_mode(**args):
                 break
     if args["train_loop"] == "deep_q_learn":
         args["exploration"] = Explorations.greedy
-    elif args["train_loop"] == "reinforce_learn" or args["train_loop"] == "actor_critic_learn":
+    elif args["train_loop"] in ["reinforce_learn", "actor_critic_learn", "PPO_learn", "PPO_learn_batches"]:
         args["exploration"] = Explorations.multinomial
     if args["continuous"]:
         args["exploration"] = Explorations.normal_distribution

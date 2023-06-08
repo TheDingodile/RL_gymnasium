@@ -138,4 +138,6 @@ def get_agent(env, **args):
         agent = PPO_Agent(env, **args)
     elif args['train_loop'] == "PPO_learn_batches":
         agent = PPO_dual_network_Agent(env, **args)
+    elif args['train_loop'] == "soft_actor_critic_learn":
+        agent = Soft_actorcritic_Actor(env, **args)
     return agent
