@@ -156,9 +156,9 @@ When running main.py, if the train_loop is set to eval, it will automatically se
 
 ## Results
 
-Here are some results from the experiments, running on LunarLander-v2. Don´t mind some of the title names, it's simply because I forgot to change it before running the experiment.
+Here are some of the interesting results from the experiments, running on LunarLander-v2. Don´t mind some of the title names, it's simply because I forgot to change it before running the experiment.
 
-## Q-learning
+### Q-learning
 
 ![Q-learning](trained_agents/deep_q_learn_lunarlander/reward_per_episode.png)
 
@@ -173,10 +173,6 @@ Continuous action space:
 ![REINFORCE](trained_agents/REINFORCE_with_baseline_lunarlander_continuous/reward_per_episode.png)
 
 ## Actorcritic
-
-Discrete action space:
-
-![Actorcritic](trained_agents/ActorCritic_lunarlander/reward_per_episode.png)
 
 Continuous action space:
 
