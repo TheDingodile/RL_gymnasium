@@ -116,6 +116,8 @@ Here all the gameloops are. Most of them look similar (have a take_action, step,
 This file has all the different agents and their training methods. There is a superclass, Agent, that holds much of the attributes all the agents has in common. Then there is a subclass of this class called Actor_agent, which carries the common charateristics of the policy gradient methods. I tried to fit all the other agents under these two umbrella classes as much as possible. An agent has a network and an exploration tool which enables it to sample actions. Not all agents use their exploration tool (eg. the Baseline agent is used only to evaluate). 
 
 short description of the agents:
+I implemented two versions of PPO. Which differs in their networks and in when they train. Each of the versions has it's own game-loop. As the first version trains after a certain amount of episodes, and the second version trains after a certain amount of frames.
+
 1. **QAgent**:
 This agent is used in Q learning and outputs Q values for each actions. It is trained with double Q learning.
 2. **REINFORCE_Agent**:
@@ -126,8 +128,6 @@ This is the critic for the actorcritic algorithm. It is similar to the QAgent, b
 Thsi is the actor for the actorcritic algorithm. It also uses eligibility traces, the critic and the actor are trained together in this agents train loop.
 5. **BaselineAgent**:
 This is simply an agent with a network that goes from state to value.
-
-I implemented two versions of PPO. Which differs in their networks and in when they train. Each of the versions has it's own game-loop. As the first version trains after each episode, and the second version trains after a certain amount of frames.
 6. **PPO_Agent**:
 This agent is trained with the PPO algorithm after each episode. It uses a seperate network for the actor part and the Q-value estimation. My experience with this PPO_Agent is not great, it's performance can be seen in "PPO_cartpole" and "PPO_lunarlander".
 7. **PPO_dual_network_Agent**:
